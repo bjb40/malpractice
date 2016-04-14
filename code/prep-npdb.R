@@ -29,8 +29,9 @@ wds = c(8,1,4,4,2,10,2,10,2,4,
         4,4,3,8,4,4,4,4,4,4,
         4,4,4,1
         )
-wds.names = c('seqno','rectype','rectype','reptype','origyear',
-              'workstat','workctry','homestat','homectry','licnstat',
+
+wds.names = c('seqno','rectype','reptype','origyear','workstat',
+              'workctry','homestat','homectry','licnstat','licnfeld',
               'practage','grad','algnnatr','alegatn1','alegatn2',
               'outcome','malyear1','malyear2','payment','totalpmt',
               'paynumbr','numbpersn','paytype','pyrrltns','ptage',
@@ -47,4 +48,16 @@ file.remove("NPDB1510.DAT") #erase unzipped data
 colnames(rawdat) = wds.names
 
 #save as dta object
+save(rawdat,file=paste0(outdir,'private~/rawdat.rda'))
+
+#output table for types of actions by year 
+
+#subset
+subdat = subset(rawdat, outcome == 9, #death only
+                select=c('origyear','workstat','homestat','licnstat','malyear1','malyear2','payment',
+                         'totalpmt','paytype',
+                         #patient demographics
+                         'ptage','ptgender','pttype','algnnatr'))
+
+
 
