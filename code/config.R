@@ -16,9 +16,9 @@ options(scipen=999, digits=3)
 #Directories
 
 #datasource
-rawdir = "H:/Academic Projects/Data Files/NPD/"
+rawdir = "H:/Academic Projects/Data Files/NPDB/"
 #parent directory
-projdir = "H:/projects/proposal/r_study/"
+projdir = "H:/projects/malpractice/"
 #directory for output
 outdir = paste0(projdir,"output/")
 
@@ -35,3 +35,5 @@ if(file.exists(paste0(projdir,'draft_img~'))==F)
 
 finalimg = paste0(projdir,'img/')
 draftimg = paste0(projdir,'draft_img~/')
+
+
