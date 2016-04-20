@@ -60,7 +60,7 @@ if (file.exists(paste0(outdir,'private~/rawdat.rda'))) {
   file.remove("NPDB1510.DAT") #erase unzipped data
   colnames(rawdat) = wds.names
   
-  #save as dta object
+  #save as rda object
   save(rawdat,file=paste0(outdir,'private~/rawdat.rda'))
 }
 
@@ -118,11 +118,113 @@ npdb.death$year = npdb.death$malyear1
   adjust = is.na(npdb.death$malyear2)==FALSE & npdb.death$malyear2>npdb.death$year
 npdb.death$year[adjust] = npdb.death$malyear2[adjust]; rm(adjust)
 
+#use fips mapps to collect short names (make sure wonder uses fips)
+library(maps)
+
 #tabulate from ICD10 onward
 npdbtab = as.data.frame(table(npdb.death[npdb.death$year>=1999,c('year','workstat','ptgender')]))
+npdbtab$State.Code = 0
 
-#compmort sufficiently aggregated
+for(r in 1:max(state.fips$fips)){
+  abb = as.character(state.fips$abb[state.fips$fips == r])
+  #print(c(r,abb))
+  npdbtab$State.Code[as.character(npdbtab$workstat) %in% abb] = r
+}
+
+#id unidentified abbreviations
+print(unique(npdbtab$workstat[npdbtab$State.Code==0]))
+
+#delete observations with death prior to 1999 and unknown gender
+dat = npdbtab; rm(npdbtab,tst,npdb.death)
+  full = sum(dat$Freq); print(full)
+
+dat$year = as.numeric(levels(dat$year))[dat$year]
+dat = dat[dat$year %in% 1999:2014,]
+  dropyear = full - sum(dat$Freq); print(dropyear)
+
+dat = dat[dat$ptgender %in% c('M','F'),]
+  missgender = full - sum(dat$Freq); print(missgender)
+
+#import compdeaths (state, year, gender)
+dat$compdeaths = as.numeric(NA)
+
+for(r in 1:nrow(dat)){
+  ob = dat[r,]
+  if(ob$State.Code == 0 | any(is.na(ob[,c('year','State.Code','ptgender')]))){
+    next;
+  } else {
+    mortob = compmort$State.Code == ob$State.Code & 
+            compmort$Year == ob$year & 
+            compmort$Gender.Code == ob$ptgender
+    dat[r,'compdeaths'] = compmort[mortob,'Deaths']
+  }
+}
+
+#@@@@@
+#Here, need to include some double book accounting
+#to ensure accuracy
+#@@@@@@
+
+#calculate relative rate of complications (can model)
+dat$rrcomp = dat$Freq/dat$compdeaths
+
+#include dummy indicator for damage cap states
+#taken from Paik, Black, & Hyman. 2003
+#Receding Tide of Med Mal Lit pt. 1, table 1
+#nonecon after 2000 are switchcap
+
+nocap = c('Alabama','Arizona','Arkansas','Connecticut','Delaware',
+          'District of Columbia','Iowa','Kentucky','Maine','Minnesota',
+          'New Hampshire','New Jersey','New York','North Carolina',
+          'Pennsylvania','Rhode Island','Tennessee','Vermont','Washington',
+          'Wyoming')
+
+#make named list
+nocap = setNames(as.list(rep(0,length(nocap))),nocap)
+
+oldcap = c('Montana','North Dakota','Wisconsin','Alaska',
+           'California','Colorado','Hawaii','Idaho',
+           'Indiana','Kansas','Louisiana','Maryland',
+           'Massachusetts','Michigan','Missouri','Nebraska',
+           'New Mexico','Oregon','South Dakota','Utah',
+           'Virginia','West Virginia')
+
+#make named list
+oldcap = setNames(as.list(rep(2014,length(oldcap))),oldcap)
+#reassign for entire span
+oldcap=lapply(oldcap,FUN = function(x) x=1999:2014) 
+
+switchcap = list()
+  switchcap[['Florida']] = switchcap[['Mississippi']] = 2003:2014
+  switchcap[['Georgia']] = 2005:2009
+  switchcap[['Illinois']] = 2006:2009
+  switchcap[['Nevada']] = switchcap[['Ohio']] = 2003:2014
+  switchcap[['Oklahoma']] = 2010:2014
+  switchcap[['South Carolina']] = 2006:2014
+  switchcap[['Texas']] = 2004:2014
+
+allcap = c(nocap,oldcap,switchcap); rm(nocap,oldcap,switchcap)
+
+fips = unique(state.fips[,c('fips','abb')])
+fips$name = as.character(NA)
+for(r in 1:nrow(fips)){
+  if(fips[r,'abb'] %in% state.abb){
+    fips$name[r] = state.name[state.abb == fips[r,'abb']]
+  }
+}
+
+fips$name[fips$abb == 'DC'] = 'District of Columbia'
+
+sum(fips$name %in% names(allcap))
+length(allcap)
+
+fips$name[! fips$name %in% names(allcap)]
 
 
+#export dat for analysis
+#check with both agencies to see if this tabulation can 
+#be publicly displayed
 
+#save cleaned data as rda object for further analysis
+save(dat,file=paste0(outdir,'private~/dat.rda'))
 
