@@ -68,13 +68,41 @@ if (file.exists(paste0(outdir,'private~/rawdat.rda'))) {
 
 #subset
 npdb.death = subset(rawdat, outcome == 9, #death only
-              select=c('origyear','workstat','homestat','licnstat','malyear1','malyear2','payment',
+              select=c('origyear','workstat','homestat','licnstat','malyear1','malyear2','aayear','payment',
                        'totalpmt','paytype',
                        #patient demographics
                        'ptage','ptgender','pttype','algnnatr'))
 
+#issue with selecting deaths - limits to NA, and a lot of NA
+#on outocme (50,000-60,000); like 60% 
+#blank in "adverse action" and type "M" malpractice payments
+#rectype explains it -- there, there is NO missing
+#and 28-30% of outcomes are death (1-3% are 10 which is missing)
 
-rm(rawdat)
+#all
+prop.table(table(rawdat[,c('origyear','outcome')],useNA='always'),1)
+
+#limited to malpractice allegations only
+round(
+  prop.table(table(
+    rawdat[rawdat$rectype == 'P',
+           c('origyear','outcome')],
+            useNA='always'),1)
+  ,2)
+
+#lag between most recent occurence and reporting...
+#reporting time of malpractice allegation does not apply to adverse actions
+maldat = subset(rawdat,rectype %in% c('P','M'))
+rmyear = apply(maldat[,c('malyear1','malyear2')],1,max, na.rm=TRUE)
+mallag = maldat$origyear[rmyear != -Inf] - rmyear[rmyear != -Inf]
+hist(mallag[mallag > 0 & mallag < 10]) 
+summary(mallag[mallag > 0 & mallag < 10]) #median is 4 years max is like forever 1st Q is 3; 
+sum(mallag>10)/length(mallag) #5% greater than 10
+
+#CONSIDER WHETHER CERTAIN PRACTITIONERS NEED EXCLUDED B/C OF DIFFERENT
+#REPORTING REQUIREMENTS
+  
+#rm(rawdat)
 
 #@@@@@@@@@@@@@@@@@@@@@
 #MULTIMORTALITY DATA
@@ -118,17 +146,23 @@ npdb.death$year = npdb.death$malyear1
   adjust = is.na(npdb.death$malyear2)==FALSE & npdb.death$malyear2>npdb.death$year
 npdb.death$year[adjust] = npdb.death$malyear2[adjust]; rm(adjust)
 
-#use fips mapps to collect short names (make sure wonder uses fips)
-library(maps)
+#use fips to collect state names and numbers (confirm wonder uses fips)
+#fips csv file downloaded from 
+#https://www.census.gov/geo/reference/ansi_statetables.html
+#4/20/2016
+
+fips = read.csv(paste0(outdir,'fips.csv'))
 
 #tabulate from ICD10 onward
 npdbtab = as.data.frame(table(npdb.death[npdb.death$year>=1999,c('year','workstat','ptgender')]))
 npdbtab$State.Code = 0
+npdbtab$State.Name = as.character(NA)
 
-for(r in 1:max(state.fips$fips)){
-  abb = as.character(state.fips$abb[state.fips$fips == r])
+for(r in fips$fips){
+  abb = fips$abb[fips$fips == r]
   #print(c(r,abb))
   npdbtab$State.Code[as.character(npdbtab$workstat) %in% abb] = r
+  npdbtab$State.Name[as.character(npdbtab$workstat) %in% abb] = as.character(fips$name[fips$fips==r])
 }
 
 #id unidentified abbreviations
@@ -165,8 +199,22 @@ for(r in 1:nrow(dat)){
 #to ensure accuracy
 #@@@@@@
 
+#missing data - initial strategy
+#1) make 0 malpractice deaths into .5 (allows log)
+dat$Freq[dat$Freq==0] = .5
+#2) impute NA in compdeaths to 10 (it is NA when less than 20)
+
+dat$compdeaths[is.na(dat$compdeaths)] = 10
+
 #calculate relative rate of complications (can model)
-dat$rrcomp = dat$Freq/dat$compdeaths
+dat$rrcomp = dat$compdeaths/dat$Freq
+
+#log deaths
+dat$lrrcomp = log(dat$rrcomp)
+
+#View(dat[is.na(dat$lrrcomp),c('compdeaths','Freq')])
+#View(dat[is.infinite(dat$lrrcomp),c('compdeaths','Freq')])
+
 
 #include dummy indicator for damage cap states
 #taken from Paik, Black, & Hyman. 2003
@@ -203,23 +251,28 @@ switchcap = list()
   switchcap[['South Carolina']] = 2006:2014
   switchcap[['Texas']] = 2004:2014
 
-allcap = c(nocap,oldcap,switchcap); rm(nocap,oldcap,switchcap)
+sum(fips$name %in% names(c(nocap,oldcap,switchcap)))
+length(c(nocap,oldcap,switchcap))
 
-fips = unique(state.fips[,c('fips','abb')])
-fips$name = as.character(NA)
-for(r in 1:nrow(fips)){
-  if(fips[r,'abb'] %in% state.abb){
-    fips$name[r] = state.name[state.abb == fips[r,'abb']]
-  }
+#fips$name[! fips$name %in% names(allcap)] all included
+
+#include dummy variable for whether the state is a cap year 
+#and dummy for type capstate
+
+dat$nocap = dat$switchcap = dat$oldcap = 0 
+  dat$nocap[dat$State.Name %in% names(nocap)] = 1
+  dat$switchcap[dat$State.Name %in% names(switchcap)] = 1
+  dat$oldcap[dat$State.Name %in% names(oldcap)] = 1
+
+dat$cap = 0
+allcap = c(nocap,switchcap,oldcap); rm(nocap,switchcap,oldcap)
+for(s in 1:length(allcap)){
+  dat$cap[dat$State.Name == names(allcap)[s] & dat$year %in% allcap[[s]]] = 1
 }
 
-fips$name[fips$abb == 'DC'] = 'District of Columbia'
-
-sum(fips$name %in% names(allcap))
-length(allcap)
-
-fips$name[! fips$name %in% names(allcap)]
-
+dat$female = as.numeric(NA)
+dat$female[dat$ptgender == 'F'] = 1
+dat$female[dat$ptgender == 'M'] = 0
 
 #export dat for analysis
 #check with both agencies to see if this tabulation can 
