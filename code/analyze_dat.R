@@ -50,7 +50,7 @@ options(mc.cores = 3) #leave one core free for work
 
 fit <- stan("bayeshlm.stan", data=c("N","P","IDS","YRS","yrctr","y","id","t","z"),
             #algorithm='HMC',
-            chains=3,iter=500,verbose=T);
+            chains=3,iter=1000,verbose=T);
 #sample_file = paste0(outdir,'diagnostic~/post-samp.txt'),
 #diagnostic_file = paste0(outdir,'diagnostic~/stan-diagnostic.txt'),
 

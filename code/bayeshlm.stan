@@ -6,14 +6,14 @@
 
 data { 
   int<lower=0> N; //n observations
-  int<lower=0> IDS; //n cells
+  int<lower=0> IDS; //n states
   int<lower=0> YRS; //n years
   int yrctr; //number to add to t to create an index of integers from 1 to end
-  int id[N]; // unique age groups (for random effect)
+  int id[N]; // unique states (for random effect)
   real y[N]; // outcomes
   int t[N]; //time variable (years)
   int<lower=0> P; //dimensions of predictors
-  matrix[N,P] z; // all time invariant
+  matrix[N,P] z; // all time invariant--includes intercept
   } 
 
 parameters{
@@ -24,7 +24,7 @@ parameters{
   real<lower=0> zi; //(scale for intercept)
   real<lower=0> delta; // variance for years
   vector[IDS] omega_i; //container for random normal draw to distribute cross-cell error
-  vector[YRS] mu_t; //container for student-t draw across years
+  vector[YRS] mu_t; //container for random effects across years
 }
 
 transformed parameters {
@@ -52,7 +52,7 @@ model{
   zi ~ cauchy(0,5);
   #pp. 294-295 BDA3
   delta ~ cauchy(0,5);
-  mu_t ~ student_t(9,0,delta);
+  mu_t ~ normal(0,delta);
   
 }
 
