@@ -281,3 +281,5 @@ dat$female[dat$ptgender == 'M'] = 0
 #save cleaned data as rda object for further analysis
 save(dat,file=paste0(outdir,'private~/dat.rda'))
 
+#save as csv for use in stata
+write.csv(dat,paste0(outdir,'private~/analysis_dat.csv'))

@@ -26,9 +26,10 @@ stname = unique(dat$State.Name[lim])
 dat$st = NA
 for(s in 1:length(stname)){dat$st[lim & dat$State.Name == stname[s]] = s}
 
-y=dat[lim,'lrrcomp']
+y=log(dat[lim,'compdeaths'])
 id=dat[lim,'st']
 z=as.matrix(cbind(rep(1,sum(lim)),dat[lim,c('nocap','female')]))
+x=dat[lim,'Freq']
 t=dat[lim,'year']
 yrctr = 1 - range(t)[1] #center index on 1 for bayesian model processing
 
@@ -48,9 +49,9 @@ rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 options(mc.cores = 3) #leave one core free for work
 
-fit <- stan("bayeshlm.stan", data=c("N","P","IDS","YRS","yrctr","y","id","t","z"),
+fit <- stan("bayeshlm.stan", data=c("N","P","IDS","YRS","yrctr","y","id","t","z","x"),
             #algorithm='HMC',
-            chains=3,iter=1000,verbose=T);
+            chains=3,iter=1500,verbose=T);
 #sample_file = paste0(outdir,'diagnostic~/post-samp.txt'),
 #diagnostic_file = paste0(outdir,'diagnostic~/stan-diagnostic.txt'),
 

@@ -14,12 +14,14 @@ data {
   int t[N]; //time variable (years)
   int<lower=0> P; //dimensions of predictors
   matrix[N,P] z; // all time invariant--includes intercept
+  real x[N]; // time-varying
   } 
 
 parameters{
   #individual level
   real beta; // grand mean coefficient for slope
-  vector[P] gamma; //
+  vector[P] gamma; // coefficient for fixed effects
+  real lambda; // coefficient for time-varying effects
   real<lower=0> sig; //l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
   real<lower=0> zi; //(scale for intercept)
   real<lower=0> delta; // variance for years
@@ -33,7 +35,7 @@ transformed parameters {
     mu_i <- omega_i*zi;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[id[n]] + t[n]*mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;
+    yhat[n] <- mu_i[id[n]] + t[n]*mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma + x[n]*lambda;
   }
 
 }
@@ -47,6 +49,7 @@ model{
   //prior
   beta ~ normal(0,5);
   gamma ~ normal(0,5);
+  lambda ~ normal(0,5);
   sig ~ normal(0,5);
 
   zi ~ cauchy(0,5);
