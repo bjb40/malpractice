@@ -29,9 +29,10 @@ xtmixed freq compdeaths oldcap switchcap female ///
 
 xtset statecode
 
-xtpoisson freq compdeaths c.compdeaths#(c.oldcap c.switchcap) female i.year, fe
-xtpoisson freq c.compdeaths#(c.oldcap c.switchcap) female i.year, fe
+xtpoisson freq compdeaths c.compdeaths#(c.oldcap c.switchcap) female, fe
+xtpoisson freq c.compdeaths#(c.oldcap c.switchcap) female, fe
 
 
 *does tortreform affect reporting of deaths??
-xtpoisson compdeaths c.compdeaths#(c.oldcap c.switchcap) female i.year, fe
+xtpoisson compdeaths c.year#cap, fe
+xtpoisson compdeaths freq c.year#cap, fe

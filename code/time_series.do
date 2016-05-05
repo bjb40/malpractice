@@ -26,7 +26,9 @@ xtset stategender year
  *okay, but these show a lot of stuff going on ...
   xtgls lrrcomp female cap switchcap year, panels(hetero) corr(psar1)
   xtgls freq compdeaths female oldcap switchcap year, panels(hetero) corr(psar1)
+  xtgls freq female oldcap switchcap year, panels(hetero) corr(psar1)
+  
   
   *does tort reform affect the reporting of deaths due to complicaitons (unspecified is alternative ratio...)
   xtgls compdeaths female oldcap switchcap year, panels(hetero) corr(psar1)
-  xtgls compdeaths female oldcap switchcap year, panels(hetero) corr(psar1)
+  xtgls compdeaths freq female oldcap switchcap year, panels(hetero) corr(psar1)
