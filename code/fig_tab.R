@@ -93,3 +93,27 @@ for(s in st){
 
 #export to csv
 write.csv(sw,paste0(outdir,'private~/agg_switch.csv'))
+
+#@@@@@
+#output icd10 adverse event supplement
+#this uses previously cleaned icd10 codes
+#from 
+#https://github.com/bjb40/cause_death/blob/master/output/icd10.csv
+
+icd10 = read.csv("H:/projects/cause_death/output/icd10.csv")
+
+sink(paste0(outdir,'icd10list.txt'))
+
+comp = icd10[icd10$nchs113 == 113,]
+  cat('Selected NCHS Causes of Death for',unique(as.character(comp$nchsti)),'\n')
+  cat('Number of unique diagnostic codes:',nrow(comp),'\n\nNames:\n\n')
+  div=unique(comp$div_name)
+  
+  for(d in div){
+    cat(d,unique(as.character(comp$div_nos[comp$div_name==d])),'\n\t')
+    cat(as.character(comp$descrip[comp$div_name==d]),sep='\n\t')
+    cat('\n\n')
+  }  
+
+sink()
+
