@@ -95,8 +95,18 @@ round(
 maldat = subset(rawdat,rectype %in% c('P','M'))
 rmyear = apply(maldat[,c('malyear1','malyear2')],1,max, na.rm=TRUE)
 mallag = maldat$origyear[rmyear != -Inf] - rmyear[rmyear != -Inf]
-hist(mallag[mallag > 0 & mallag < 10]) 
-summary(mallag[mallag > 0 & mallag < 10]) #median is 4 years max is like forever 1st Q is 3; 
+plt = mallag[mallag>=0 & mallag<15]
+
+png(paste0(draftimg,'lag_hist.png'))
+  hist(plt,freq=FALSE,main='',xlab='Years Since Event', 
+    ylim=c(0,.20),ylab='Proportion',breaks=18) 
+dev.off()
+
+rnd(prop.table(table(plt)))
+
+rm(plt)
+
+summary(mallag[mallag >= 0 & mallag < 10]) #median is 4 years max is like forever 1st Q is 3; 
 sum(mallag>10)/length(mallag) #5% greater than 10
 
 #CONSIDER WHETHER CERTAIN PRACTITIONERS NEED EXCLUDED B/C OF DIFFERENT

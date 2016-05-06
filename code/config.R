@@ -7,7 +7,7 @@
 #@@
 #options
 
-#source("H:/projects/proposal/r_study/code/funs.R")
+source("H:/projects/proposal/r_study/code/funs.R")
 
 #turn off sicentific notation for display
 options(scipen=999, digits=3)
