@@ -96,7 +96,7 @@ $$
 \rho
 \begin{cases}	
  = 0, if f(PC,t) < f(v) \\
- > 0, if f(PC,t) > f(v)
+ \ne 0, if f(PC,t) > f(v)
 \end{cases}
 $$
 

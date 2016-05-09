@@ -102,7 +102,7 @@ png(paste0(draftimg,'lag_hist.png'))
     ylim=c(0,.20),ylab='Proportion',breaks=18) 
 dev.off()
 
-rnd(prop.table(table(plt)))
+print(rnd(prop.table(table(plt))))
 
 rm(plt)
 
@@ -192,6 +192,10 @@ dat = dat[dat$ptgender %in% c('M','F'),]
 #import compdeaths (state, year, gender)
 dat$compdeaths = as.numeric(NA)
 
+#see notes for rationale: mean 2-5 years behind
+dat$lagcompdeaths = as.numeric(NA)
+dat$lagmp = as.numeric(NA)
+
 for(r in 1:nrow(dat)){
   ob = dat[r,]
   if(ob$State.Code == 0 | any(is.na(ob[,c('year','State.Code','ptgender')]))){
@@ -202,6 +206,20 @@ for(r in 1:nrow(dat)){
             compmort$Gender.Code == ob$ptgender
     dat[r,'compdeaths'] = compmort[mortob,'Deaths']
   }
+  
+    ys = (ob$year-2):(ob$year-5)
+    meanob = compmort$State.Code == ob$State.Code & 
+      compmort$Gender.Code == ob$ptgender
+    
+  #print(c(ys,mean(compmort[meanob,'Deaths'])))
+    
+    dat[r,'lagcompdeaths'] = mean(compmort[meanob & compmort$Year %in% ys,'Deaths'],na.rm=TRUE)
+
+    lagob = dat$State.Code == ob$State.Code & 
+            dat$ptgender == ob$ptgender &
+            dat$year == (ob$year - 1)
+    if(sum(lagob) == 1){
+      dat[r,'lagmp'] = dat[lagob,'Freq'] }
 }
 
 #@@@@@
