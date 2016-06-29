@@ -32,7 +32,11 @@ xtset stategender year
  reg freq lagcompdeaths female cap switchcap year
  
  *this is the fgls n woolrdge p. 421 / inefficient
-  xtgls freq lagcompdeaths female cap switchcap year, panels(hetero) corr(psar1)
+ 
+  eststo: xtgls freq female oldcap switchcap year, panels(hetero) corr(psar1)
+  eststo: xtgls freq lagcompdeaths female oldcap switchcap year, panels(hetero) corr(psar1)
+  
+  esttab
   
   xtset statecode
  *re
@@ -51,8 +55,13 @@ xtset stategender year
  xtpoisson freq lagcompdeaths female i.year, fe
  xtpoisson freq lagcompdeaths cap female i.year, fe
   
- xtnbreg freq lagcompdeaths female i.year, fe
- xtnbreg freq lagcompdeaths cap female i.year, fe
+  xtset statecode
+  
+ eststo clear
+ eststo: xtnbreg freq cap i.year, fe
+ eststo: xtnbreg freq lagcompdeaths cap i.year, fe
+  
+  esttab
   
  *logged value
  gen lnfbycomp = log(freq)/log(lagcompdeaths)
@@ -65,9 +74,13 @@ xtset stategender year
  * linear
  reg compdeaths lagmp female cap switchcap year
 
+ eststo clear
  xtset stategender year
  *this is the fgls n woolrdge p. 421 / inefficient
-  xtgls compdeaths lagmp female cap switchcap year, panels(hetero) corr(psar1)
+  eststo: xtgls compdeaths female cap switchcap year, panels(hetero) corr(psar1)
+  eststo: xtgls compdeaths lagmp female cap switchcap year, panels(hetero) corr(psar1)
+  
+  esttab
   
   xtset statecode
  *re
@@ -87,5 +100,83 @@ xtset stategender year
  xtpoisson compdeaths lagmp cap female i.year, fe
  
  *not supported here
- xtnbreg compdeaths lagmp female i.year, fe
- xtnbreg compdeaths lagmp cap female i.year, fe
+ eststo clear
+ eststo: xtnbreg compdeaths cap i.year, fe
+ eststo: xtnbreg compdeaths lagmp cap i.year, fe
+
+ esttab
+ 
+ 
+*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+*Hypothesis 3: spike -- first difference models same as H2
+*http://www.statalist.org/forums/forum/general-stata-discussion/general/193879-first-difference-regression
+*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
+
+xtset stategender year
+
+
+
+
+eststo clear
+eststo: xtreg d.compdeaths i.year
+eststo: xtreg d.compdeaths d.lagmp i.year
+eststo: xtreg d.compdeaths d.cap i.year
+eststo: xtreg d.compdeaths d.lagmp d.cap i.year
+
+esttab
+
+
+*@@@@@@@@@@@@@@@@
+*percentile recodes
+*@@@@@@@@@@@@@@@@
+
+
+tsset stategender year
+
+gen dmp = d.lagmp
+
+*create percentile cuts for lagmp
+centile(dmp), centile(50 75 90 95)
+egen dmp_high = cut(dmp), at(-100,0,3,8,13,40) label
+
+*@@@@@@@@@@@@@@@
+*@@@@@@@@@@@@@@@
+*HERE
+*@@@@@@@@@@@@@@@
+*@@@@@@@@@@@@@@@
+
+*quadratic linear--no effect
+ eststo clear
+ eststo: xtreg d.compdeaths d.cap i.year
+ eststo: xtreg d.compdeaths dmp c.dmp#i.dmp_high i.year d.cap
+ esttab
+
+*piecewise apparent effect 
+ eststo clear
+ eststo: xtnbreg compdeaths cap i.year, fe
+ eststo: xtnbreg compdeaths lagmp i.lagmp_high c.lagmp#i.lagmp_high cap i.year, fe
+ esttab
+
+ 
+ eststo clear
+ eststo: xtpoisson compdeaths cap i.year, fe
+ eststo: xtpoisson compdeaths lagmp i.lagmp_high c.lagmp#i.lagmp_high cap i.year, fe
+ esttab
+
+ 
+ *lower interddept, higher slope 
+ eststo clear
+ eststo: xtmixed compdeaths cap i.year || stategender:
+ eststo: xtmixed compdeaths lagmp i.lagmp_high c.lagmp#i.lagmp_high cap i.year || stategender:
+ esttab
+
+ 
+ *piecewise apparent effect 
+*no effect
+ eststo clear
+ eststo: nbreg compdeaths cap i.year
+ eststo: nbreg compdeaths lagmp i.lagmp_high c.lagmp#i.lagmp_high cap i.year
+ esttab
+
+ 
+ 
