@@ -24,27 +24,17 @@ These two datasets provide for parallel time series across states. Employing ```
 
 #Background
 
-Medical malpractice sits at the intersection of two large and important fields: medicine and law. For two reasons, this study focuses on malpractice claims resulting in death. First, cause-of-death statistics reported by each state have been aggregated and reported by the Center for Disease Control for decades. Combining this administrative data with the National Practitioner Data Bank provide the opportunity to investigate the cross-influence for causes of death and malpractice claims. Second, the seriousness of the allegation--death--diminishes the the possibility that claims are foregone, because they are not worth litigating.
+Fundamentally, law and policy surrounding medical malpractice relates directly to public health and safety. Medical practice is subject to both licensure and standard-of-care rules and regulations. These are intended to protect the public and protect the health and safety of the populace. In fact, some of the most basic medical practices, like washing hands, have made profound differences in patient outcomes, including reductions in mortality rates ```citation```. In addition, as with all tort law, medical malpractice is designed to take care of individuals wronged by the failure of the medical system to meet reasonably expected standards of care ```citation```. Of course, these ideal designs are subject to the imperfections related to laws and agency externalities. One of the more concretely defined arguments against law and policy, is a fear that too aggressively protection or reimbursement leads to "defensive medicine" ```citations```. In this instance, instead of medical procedures and practice focused on patient safety and clinical considerations, physician decisions are driven by their desire to avoid litigation and malpractice risk.
 
+It is a well-known fact from social science that the breadth, importance, and jurisdiction of medical care and medical services have increased exponentially over the past century, a process known as "medicalization" ```medicalization cites```. At the same time, the various states of the United States have struggled with the appropriate level and manner of medical malpractice, introducing a great deal of variability in malpractice treatment. Given the breadth and changes across medical care and malpractice context, most studies focus on some small piece of the puzzle, often slicing by geographical closeness or medical practice, such as ___ ```examples and citations```.
 
+Similarly, this study limits analysis of malpractice claims to those resulting in death. This limitation provides to important benefits. First, cause-of-death statistics reported by each state have been aggregated and reported by the Center for Disease Control for decades. Combining this administrative data with the National Practitioner Data Bank provide the opportunity to investigate the cross-influence for causes of death and malpractice claims. Second, the seriousness of the allegation--death--diminishes the the possibility that claims are foregone, because they are not worth litigating. In this way, this study can provide a nationwide representative analysis of the co-relation between malpractice claims and public health (as measured by mortality), but minimizes difficulties in making cross-state comparaisons. 
 
-##Institutional Supremacy of Medical Expertise
+##Public Heatlh, Mortality, and Malpractice Rates
 
+The oldest and simplest measures of public health involve mortality statistics. Collecting cause-of-death statistics is perhaps the longest and most expensive data collection projects to date. It is a continuous, population-level project: most deaths require a formal death certificate executed by a medical professional. This certificate identifies the medical reason for death, such as, suicide, vehicular accident, heart attack, or influenza. More specifically, the cause-of-death information in is the single, underlying cause representing "the disease or injury that initiated the train of events leading directly to death" (World Health Organization, 2011, p. 31).
 
-
-```social science studies```
-
-
-
-##Research on Death Certificates related to Defensive Medicine
-
-Collecting cause-of-death statistics is perhaps the longest and most expensive data collection projects to date. It is a continuous, population-level project: most deaths require a formal death certificate executed by a medical professional. This certificate identifies the medical reason for death, such as, suicide, vehicular accident, heart attack, or influenza. More specifically, the cause-of-death information in is the single, underlying cause representing "the disease or injury that initiated the train of events leading directly to death" (World Health Organization, 2011, p. 31).
-
-The ICD contains a number of causes for "complications," which include adverse reactions and "misadventures." In at least one case, these are referred to as insufficient for mens rea, like an accident, but perhaps does not preclude negligence [@_state_1995, p. 862; *but see* @_mcilraith_2001]. One expert physician was quoted using "misadventure" to be synonymous with "accident" [@_pavey_2010]. Ultimately, these include accidents or complicatio
-
-
-
-]]]ns directly related to care, but do not necessarily include an "error" in the medical care or imply preventability.
+The ICD contains a number of causes for "complications," which include adverse reactions and "misadventures." In at least one case, these are referred to as insufficient for mens rea, like an accident, but perhaps does not preclude negligence [@_state_1995, p. 862; *but see* @_mcilraith_2001]. One expert physician was quoted using "misadventure" to be synonymous with "accident" [@_pavey_2010]. Ultimately, these include accidents or complications directly related to care, but do not necessarily include an "error" in the medical care or imply preventability.
 
 ##Law and the Medical Field
 
@@ -53,8 +43,6 @@ A few years ago, the Journal of Empirical Legal Studies published some (primaril
 ```
 I am interested in two concepts: improvements (or lack thereof) in health care quality and in defensive medicine. I can gloss these with medicalization concepts from the second year paper and add an aging component without too much trouble (initial thoughts are in the note entitled "Preliminary analysis and data" (prelim_code...)). This memo provides an overview of the legal research on these terms, primarily through the jumping point outlined in this JELS article [@paik_receding_2013].
 ```
-
-#Summary
 
 ##Health Care Quality
 
@@ -79,8 +67,6 @@ Two major definitions of defensive medicine and the key original studies are out
 H2: malpractice claims -> suboptimal care (i.e. more dangerous) medical care
 
 H3: unusual spikes in malpractice claims -> drop in the measure of care
-
-H4: changes in malpractice claims -> similar changes in 
 
 ##Cause of Death
 

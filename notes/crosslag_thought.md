@@ -278,8 +278,6 @@ The structure is the same as H2, but I need to include an interaction term for a
 
 ~~~~~~~~~~~~~~~~~~
 
-
-
 ----------------------------------------------------------------------------
                       (1)             (2)             (3)             (4)   
              D.compdeaths    D.compdeaths    D.compdeaths    D.compdeaths   
@@ -314,6 +312,10 @@ t statistics in parentheses
 * p<0.05, ** p<0.01, *** p<0.001
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+More notes:
+
+~~~~~~~~~~~~~~~~~~~~~~``
 
 *More Sophisticated Joint Models:*
 
@@ -397,3 +399,4 @@ end of do-file
 . 
 end of do-file
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
