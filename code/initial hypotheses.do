@@ -64,8 +64,8 @@ xtset stategender year
   esttab
   
  *logged value
- gen lnfbycomp = log(freq)/log(lagcompdeaths)
-  xtgls lnfbycomp female cap switchcap year, panels(hetero) corr(psar1)
+ *gen lnfbycomp = log(freq)/log(lagcompdeaths)
+ * xtgls lnfbycomp female cap switchcap year, panels(hetero) corr(psar1)
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
@@ -79,6 +79,8 @@ xtset stategender year
  *this is the fgls n woolrdge p. 421 / inefficient
   eststo: xtgls compdeaths female cap switchcap year, panels(hetero) corr(psar1)
   eststo: xtgls compdeaths lagmp female cap switchcap year, panels(hetero) corr(psar1)
+  
+  eststo: xtgls compdeaths freq female cap switchcap year, panels(hetero) corr(psar1)
   
   esttab
   
@@ -95,9 +97,12 @@ xtset stategender year
  reg compdeaths lagmp oldcap switchcap female i.statecode i.year
  xtreg compdeaths lagmp female i.year, fe 
  xtreg compdeaths lagmp cap female i.year, fe 
-
+ xtreg  compdeaths freq cap female i.year,fe
+ 
  xtpoisson compdeaths lagmp female i.year, fe
  xtpoisson compdeaths lagmp cap female i.year, fe
+ xtpoisson compdeaths freq cap female i.year, fe
+ 
  
  *not supported here
  eststo clear
