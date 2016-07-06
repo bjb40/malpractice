@@ -9,7 +9,9 @@ rm(list=ls())
 #@@
 source('config.R')
 
-#Special Funcitons
+require(knitr)
+
+#Special Functions
 #@@
 
 #none
@@ -156,6 +158,8 @@ pandoc(paste0(outdir,'descriptives.md'),format='docx')
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
+#box plots of series
+
 yrs = ags[,1]
 mp = ags[,2][,1]
 ps = ags[,3][,1]
@@ -166,4 +170,27 @@ par(mfrow=c(2,1),mar=c(2,2,1,2))
   boxplot(dat$Freq~dat$year,main='Paid Malpractice Claims')
 dev.off()
   
-  
+#box plots of first difference
+#create first difference
+
+#generate unique id by state and gender
+#and reshape wide to long
+dat$id=paste0(dat$State.Code,dat$female)
+
+mpdat = ts(reshape(dat[,c('Freq','id','year')],
+                timevar='year',
+                idvar='id',
+                direction='wide'))
+
+compdat = ts(reshape(dat[,c('compdeaths','id','year')],
+                     timevar='year',
+                     idvar='id',
+                     direction='wide'))
+
+colnames(mpdat)=colnames(compdat)=c('id',1999:2014)
+
+png(paste0(draftimg,'box-series-1diff.png'))
+  par(mfrow=c(2,1),mar=c(2,2,1,2))
+  boxplot(diff(compdat[,2:17]),xaxt='n',main="Deaths from Complications (First Difference)")
+  boxplot(diff(mpdat[,2:17]),main='Paid Malpractice Claims (First Difference)')
+dev.off()

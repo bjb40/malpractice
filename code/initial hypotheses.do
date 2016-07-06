@@ -52,8 +52,10 @@ xtset stategender year
  xtreg freq lagcompdeaths female i.year, fe 
  xtreg freq lagcompdeaths cap female i.year, fe 
 
- xtpoisson freq lagcompdeaths female i.year, fe
- xtpoisson freq lagcompdeaths cap female i.year, fe
+ eststo clear
+ eststo: xtpoisson freq lagcompdeaths female i.year, fe
+ eststo: xtpoisson freq lagcompdeaths cap female i.year, fe
+  esttab
   
   xtset statecode
   
@@ -66,6 +68,15 @@ xtset stategender year
  *logged value
  *gen lnfbycomp = log(freq)/log(lagcompdeaths)
  * xtgls lnfbycomp female cap switchcap year, panels(hetero) corr(psar1)
+ 
+ 
+ *************************
+ *************************
+ *Hybrid model for use
+ *************************
+ *************************
+ 
+ 
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
@@ -99,36 +110,48 @@ xtset stategender year
  xtreg compdeaths lagmp cap female i.year, fe 
  xtreg  compdeaths freq cap female i.year,fe
  
- xtpoisson compdeaths lagmp female i.year, fe
- xtpoisson compdeaths lagmp cap female i.year, fe
- xtpoisson compdeaths freq cap female i.year, fe
+ *supported here
+ eststo clear
+ eststo: xtpoisson compdeaths lagmp female i.year, fe
+ eststo: xtpoisson compdeaths lagmp cap female i.year, fe
+ eststo: xtpoisson compdeaths freq cap female i.year, fe
  
+ esttab
  
- *not supported here
+ *not supported here -- INEFFICIENT
+ xtset stategender
  eststo clear
  eststo: xtnbreg compdeaths cap i.year, fe
  eststo: xtnbreg compdeaths lagmp cap i.year, fe
 
  esttab
  
+ *allison conditional model
+ *http://statisticalhorizons.com/fe-nbreg
+ 
+ *individual specific means
+ egen mcompdeaths = mean(compdeaths), by(stategender) 
+ egen mcap = mean(cap), by(stategender)
+ egen mlagmp = mean(lagmp), by(stategender)
+ 
+ *time-varying deviations from means
+ gen dcompdeaths = compdeaths - mcompdeaths
+ gen dcap = cap - mcap
+ gen dlagmp = lagmp - mlagmp
+ 
+ eststo clear
+ xtset stategender
+ eststo: xi: xtnbreg compdeaths  mcap mlagmp dcap dlagmp i.year, re
+ eststo: xi: xtnbreg compdeaths  mcap mlagmp dcap dlagmp i.year, pa robust
+ 
+ esttab
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 3: spike -- first difference models same as H2
 *http://www.statalist.org/forums/forum/general-stata-discussion/general/193879-first-difference-regression
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
-xtset stategender year
 
-
-
-
-eststo clear
-eststo: xtreg d.compdeaths i.year
-eststo: xtreg d.compdeaths d.lagmp i.year
-eststo: xtreg d.compdeaths d.cap i.year
-eststo: xtreg d.compdeaths d.lagmp d.cap i.year
-
-esttab
 
 
 *@@@@@@@@@@@@@@@@
@@ -143,12 +166,63 @@ gen dmp = d.lagmp
 *create percentile cuts for lagmp
 centile(dmp), centile(50 75 90 95)
 egen dmp_high = cut(dmp), at(-100,0,3,8,13,40) label
+*cut based on analyisis
+gen dmp90 = 0
+	replace dmp90=1 if dmp>13 
+centile(lagmp), centile(50 75 90 95)
+egen lagmp_high = cut(lagmp), at (15,35.75,79.7,133.35) label
 
 *@@@@@@@@@@@@@@@
 *@@@@@@@@@@@@@@@
 *HERE
 *@@@@@@@@@@@@@@@
 *@@@@@@@@@@@@@@@
+
+
+eststo clear
+ xtset stategender year
+ *this is the fgls n woolrdge p. 421 / inefficient
+  eststo: xtgls compdeaths female cap switchcap year, panels(hetero) corr(psar1)
+  eststo: xtgls compdeaths dmp female cap switchcap year, panels(hetero) corr(psar1)
+  eststo: xtgls compdeaths dmp#i.dmp_high female cap switchcap year, panels(hetero) corr(psar1)
+esttab
+
+
+ *supported here
+ xtset statecode
+ eststo clear
+ eststo: xtpoisson compdeaths lagmp female i.year, fe
+ eststo: xtpoisson compdeaths lagmp cap female i.year, fe
+ eststo: xtpoisson compdeaths freq cap female i.year, fe
+esttab
+
+
+*@@@@@@@@@@@@@@@
+*hybrid
+*@@@@@@@@@@@@@@@
+
+egen mdmp = mean(dmp), by(stategender)
+egen mdmp90 = mean(dmp90), by(stategender)
+gen ddmp = dmp - mdmp
+gen ddmp90 = dmp90-mdmp90
+
+*includes female/state trends
+ xtset stategender 
+ eststo clear
+ eststo: xi: xtnbreg compdeaths female oldcap switchcap mcap mlagmp mdmp90 dcap dlagmp ddmp90 i.year, re
+ eststo: xi: xtnbreg compdeaths female oldcap switchcap  mcap mlagmp mdmp90 dcap dlagmp ddmp90 i.year, pa robust
+esttab
+
+
+
+eststo clear
+eststo: xtreg d.compdeaths i.year
+eststo: xtreg d.compdeaths d.lagmp i.year
+eststo: xtreg d.compdeaths d.cap i.year
+eststo: xtreg d.compdeaths d.lagmp d.cap i.year
+
+esttab
+
 
 *quadratic linear--no effect
  eststo clear
