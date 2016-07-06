@@ -117,3 +117,53 @@ comp = icd10[icd10$nchs113 == 113,]
 
 sink()
 
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#DESCRIPTIVE TABLE
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#fixed characteristics
+fx = c('year','oldcap','switchcap','nocap','female')
+
+cons = apply(dat[,fx],2,FUN=function(x) 
+  c(mn=mean(as.numeric(x), na.rm=TRUE),sd=sd(x,na.rm=TRUE),nmiss=sum(is.na(x)))
+)
+
+#changing characteristics
+cx = c('Freq','compdeaths','cap','lagmp','lagcompdeaths')
+
+ags = aggregate(dat[,cx],by=list(dat$year),FUN=function(x) 
+  c(mn=mean(as.numeric(x), na.rm=TRUE),sd=sd(x,na.rm=TRUE))
+  )
+
+#this is a hokey way to make it work...
+tags = t(ags); colnames(tags) = ags$Group.1
+
+sink(paste0(outdir,'descriptives.md'))
+  cat('Table of Constatn descripives.\r\n\r\n')
+
+  kable(cons,format='markdown',caption='Constant descrptives')
+  cat('\r\n\r\nTable of Moving descriptives\r\n\r\n')
+  kable(t(tags),format='markdown',caption='Changing descrptives')
+  
+sink()
+
+
+pandoc(paste0(outdir,'descriptives.md'),format='docx')
+
+
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#Descriptive line graphs
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+yrs = ags[,1]
+mp = ags[,2][,1]
+ps = ags[,3][,1]
+
+png(paste0(draftimg,'box-series.png'))
+par(mfrow=c(2,1),mar=c(2,2,1,2))
+  boxplot(dat$compdeaths~dat$year,xaxt='n',main="Deaths from Complications")
+  boxplot(dat$Freq~dat$year,main='Paid Malpractice Claims')
+dev.off()
+  
+  

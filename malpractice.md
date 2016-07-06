@@ -90,7 +90,7 @@ This means that a simple state-level fixed effect will not be comparing the rela
 
 #Results
 
-Table 1 descriptives ....
+Table 1 descriptives ...
 
 medical malpractice in purely in legal studies. Or studies of medical errors for patient safety.
 
