@@ -158,6 +158,7 @@ sink()
 pandoc(paste0(outdir,'descriptives.md'),format='docx')
 
 
+
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #Descriptive line graphs
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -199,3 +200,15 @@ png(paste0(draftimg,'box-series-1diff.png'))
   boxplot(diff(compdat[,2:ncol(compdat)]),xaxt='n',main="Deaths from Complications (First Difference)")
   boxplot(diff(mpdat[,2:ncol(mpdat)]),main='Paid Malpractice Claims (First Difference)')
 dev.off()
+
+
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#Scatterplot
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+png(paste0(draftimg,''))
+plot(dat$Freq,dat$compdeaths, 
+     ylab='Deaths Due to Complications',
+     xlab='Paid Malpractice Claims'
+     )#,xlim=c(0,50),ylim=c(0,600))
+

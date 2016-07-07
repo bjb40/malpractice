@@ -1,7 +1,6 @@
 *dev Stata 14
 *models for draft submission to CELS
 *Bryce Bartlett
-*tvcaps branch
 
 clear
 
@@ -66,33 +65,51 @@ gen ddmp90 = dmp90-mdmp90
 *Baseline malpractice claims
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
-eststo: xi: xtnbreg freq female nocap switchcap i.year, re
+eststo: xi: xtnbreg freq female mcap dcap i.year, re
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 1: lower patient safety (large compdeaths) are associated with increased claims 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
  
- eststo: xi: xtnbreg freq mlagcomp dlagcomp female nocap switchcap i.year, re
-
+ eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
+	estimates save h1
+	
  ****************************
  *export table 1
  ****************************
  
  esttab using "H:/projects/malpractice/output/hypothesis1.rtf", replace
 
- *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ ****************************
+ *marginal effects
+ ****************************
+
+ estpost margins,at(mlagcomp=(25(25)500)) atmeans expression(exp(predict(xb))) 
+  putexcel A1=matrix(e(table), names) ///
+using "H:/projects/malpractice/output/m1_mlagcomp_margins.xls", replace
+ *marginsplot
+ 
+
+ estimates restore est2
+ estimates esample:freq mlagcomp dlagcomp female mcap dcap year, replace
+ estpost margins,at(dlagcomp=(-200(25)200)) atmeans expression(exp(predict(xb)))
+    putexcel A1=matrix(e(table), names) ///
+using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
+ *marginsplot
+ 
+*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Baseline complication deaths
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
  eststo clear
- eststo: xi: xtnbreg compdeaths female nocap switchcap i.year, re
+ eststo: xi: xtnbreg compdeaths female mcap dcap i.year, re
 
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
- eststo: xi: xtnbreg compdeaths mlagmp dlagmp female nocap switchcap i.year, re
+ eststo: xi: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 3: spike -- first difference models same as H2
@@ -100,8 +117,8 @@ eststo: xi: xtnbreg freq female nocap switchcap i.year, re
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
 
- eststo: xi: xtnbreg compdeaths female nocap switchcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
-	eststo: xi: xtnbreg compdeaths female nocap switchcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
+ eststo: xi: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
+	eststo: xi: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
 
  
  esttab using "H:/projects/malpractice/output/hypothesis2-3.rtf", replace
