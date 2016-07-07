@@ -22,9 +22,11 @@ require(knitr)
 load(paste0(outdir,'private~/dat.rda'))
 
 #exclude States that are not in fips
-
-
 dat = dat[dat$State.Code > 0,]
+
+#limit to relevant years
+
+
 
 #STRUCTURAL ZEROS (146)
 #dat$rrcomp[dat$rrcomp == 0] = NA
@@ -123,6 +125,9 @@ sink()
 #DESCRIPTIVE TABLE
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+#limit to relevant years
+dat = dat[dat$year>=2003 & dat$year <=2008,]
+
 #fixed characteristics
 fx = c('year','oldcap','switchcap','nocap','female')
 
@@ -187,10 +192,10 @@ compdat = ts(reshape(dat[,c('compdeaths','id','year')],
                      idvar='id',
                      direction='wide'))
 
-colnames(mpdat)=colnames(compdat)=c('id',1999:2014)
+colnames(mpdat)=colnames(compdat)=c('id',unique(dat$year))
 
 png(paste0(draftimg,'box-series-1diff.png'))
   par(mfrow=c(2,1),mar=c(2,2,1,2))
-  boxplot(diff(compdat[,2:17]),xaxt='n',main="Deaths from Complications (First Difference)")
-  boxplot(diff(mpdat[,2:17]),main='Paid Malpractice Claims (First Difference)')
+  boxplot(diff(compdat[,2:ncol(compdat)]),xaxt='n',main="Deaths from Complications (First Difference)")
+  boxplot(diff(mpdat[,2:ncol(mpdat)]),main='Paid Malpractice Claims (First Difference)')
 dev.off()
