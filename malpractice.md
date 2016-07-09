@@ -1,4 +1,5 @@
-: Bryce Bartlett
+---
+author: Bryce Bartlett
 title: "Coevolution of Medical Malpractice Claims and Causes of Death Over Time"
 csl: ./citations/law-and-society.csl
 bibliography: ./citations/malpractice.bib
@@ -11,7 +12,7 @@ date: 7/10/2016
 
 #Introduction
 
-A number of studies have identified trends and changes in medical malpractice claims over time, including the waxing and waning of claims (sometimes called crises) and responses to these changes, primarily through tort reform [@paik_receding_2013; @baker_medical_2005]. The thrust for most of this literature and analysis is to distinguish malpractice claims that result from misconduct and error, and malpractice claims that are merely spurious [@baker_medical_2005]. Separating these claims is both a theoretical and empirical project. The fundamental issue is identifying the inter-relationship between malpractice claims and medical care. The particular pathways from medical care to malpractice claims focus on quality of care. The suggested association is that better medical care leads to more claims, and conversely that worse medical care leads to fewer claims [@paik_receding_2013].
+A number of studies have identified trends and changes in medical malpractice claims over time, including the waxing and waning of claims and responses to these changes, primarily through tort reform [@paik_receding_2013; @baker_medical_2005]. The thrust for most of this literature and analysis is to distinguish malpractice claims that result from misconduct and error, and malpractice claims that are merely spurious [@baker_medical_2005]. Separating these claims is both a theoretical and empirical project. The fundamental issue is identifying the inter-relationship between malpractice claims and medical care. The particular pathways from medical care to malpractice claims focus on quality of care. The suggested association is that better medical care leads to more claims, and conversely that worse medical care leads to fewer claims [@paik_receding_2013].
 
 Importantly, there are also assertions that the tenor and quality of malpractice claims impacts the quality of patient care, commonly under the moniker of "defensive medicine." Literature in this vein ordinarily focuses on physician practice, and increases in health care costs from unnecessary tests and procedures```citations```. However, an even more troubling implication for "defensive medicine" is that an increase in unnecessary medical care should also lead to poorer patient health. Any health procedure has an inherent risk, and over-treatment should leads to larger numbers of detrimental outcomes. All medical care comes with inherent risks, and the suboptimal care suggested by defensive medicine should be observable in population health, and not solely physician practice and health care costs.
 
@@ -114,7 +115,6 @@ Table 1 descriptives ...
 medical malpractice in purely in legal studies. Or studies of medical errors for patient safety.
 
 Why COD is a good place to study:  (1) 1/3 of all malpractice payments are COD. Wrongful death is also highest payouts (confirm), and minimizes the barriers of small-scale claims. (2) practically, it includes the best large-scale data. Distinguish from state-level tests of hospital safety.
-
 
 
 #Discussion and Conclusion
