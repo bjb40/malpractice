@@ -55,6 +55,15 @@ egen mdmp90 = mean(dmp90), by(statecode)
 gen ddmp = dmp - mdmp
 gen ddmp90 = dmp90-mdmp90
  
+ 
+ label variable mlagcomp "Deaths from Complications (Between)"
+ label variable dlagcomp "Differnce in Deaths from Complications (Within)"
+
+ label variable mlagmp "Paid Claims for Wrongful Death (Between)"
+ label variable dlagmp "Difference in Paid Claims for Wrongful Death (Within)"
+
+ label variable mdmp90 "Proportion of years Experiencing Spikes in Paid Claims (Between)"
+ 
  eststo clear
  
   xtset statecode
@@ -87,17 +96,17 @@ eststo: xi: xtnbreg freq female mcap dcap i.year, re
 *using "H:/projects/malpractice/output/m1_mlagcomp_margins.xls", replace
 
  quietly: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re 
- 
-
- *marginsplot
+ quietly: margins,at(mlagcomp=(25(25)500)) atmeans expression(exp(predict(xb)))
+ marginsplot, xlabel(25(50)500) recast(line) recastci(rarea) ytitle(Predicted No. of Paid Claims) 
  
  *for some bullshit reason estposting the estimates clears the regression estimates
  *save and restore don't work for some reason
- quietly: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re 
- estpost margins,at(dlagcomp=(-200(25)200)) atmeans expression(exp(predict(xb)))
-    putexcel A1=matrix(e(table), names) ///
-using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
- *marginsplot
+ *quietly: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re 
+ quietly: margins,at(dlagcomp=(-200(25)200)) atmeans expression(exp(predict(xb)))
+    *putexcel A1=matrix(e(table), names) ///
+*using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
+ marginsplot, xlabel(-200(25)200) recast(line) recastci(rarea) ytitle(Predicted No. of Paid Claims) 
+
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Baseline complication deaths
@@ -128,15 +137,17 @@ using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
  *h2
  
 quietly: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
- margins, at(mlagmp=(5(20)200)) atmeans expression(exp(predict(xb))) 
- marginsplot
+ quietly: margins, at(mlagmp=(0(20)200)) atmeans expression(exp(predict(xb))) 
+ marginsplot, xlabel(0(20)200) recast(line) recastci(rarea) ytitle(Predicted No. Deaths due to Med. Complications) 
  
 margins, at(dlagmp=(-60(20)120)) atmeans expression(exp(predict(xb))) 
- marginsplot
+ quietly: marginsplot, xlabel(-60(20)120) recast(line) recastci(rarea) ytitle(Predicted No. Deaths due to Med. Complications) 
+ 
 
  *h3
  quietly: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
- margins, at(mdmp90=(0(.166666).5)) atmeans expression(exp(predict(xb))) 
- marginsplot
+ quietly: margins, at(mdmp90=(0(.166666).5)) atmeans expression(exp(predict(xb))) 
+ marginsplot, xlabel(0(.166666).5) recast(line) recastci(rarea) ytitle(Predicted No. Deaths due to Med. Complications) 
+
  
  
