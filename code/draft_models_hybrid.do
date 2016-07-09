@@ -12,7 +12,6 @@ drop if (year<2003 | year>2008 | statecode == 0)
 
 gen stategender = statecode
 replace stategender = statecode + 100 if female == 1
-
  
  *******************************************************************************
  *******************************************************************************
@@ -32,7 +31,6 @@ replace stategender = statecode + 100 if female == 1
  gen dlagcomp = lagcompdeaths - mlagcomp
  gen dcap = cap - mcap
  gen dlagmp = lagmp - mlagmp
- 
  
  *******************************************************************************
  *******************************************************************************
@@ -72,7 +70,7 @@ eststo: xi: xtnbreg freq female mcap dcap i.year, re
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
  
  eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
-	estimates save h1
+	*estimates save h1
 	
  ****************************
  *export table 1
@@ -84,14 +82,18 @@ eststo: xi: xtnbreg freq female mcap dcap i.year, re
  *marginal effects
  ****************************
 
- estpost margins,at(mlagcomp=(25(25)500)) atmeans expression(exp(predict(xb))) 
-  putexcel A1=matrix(e(table), names) ///
-using "H:/projects/malpractice/output/m1_mlagcomp_margins.xls", replace
- *marginsplot
+*estpost margins,at(mlagcomp=(25(25)500)) atmeans expression(exp(predict(xb))) 
+*  putexcel A1=matrix(e(table), names) ///
+*using "H:/projects/malpractice/output/m1_mlagcomp_margins.xls", replace
+
+ quietly: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re 
  
 
- estimates restore est2
- estimates esample:freq mlagcomp dlagcomp female mcap dcap year, replace
+ *marginsplot
+ 
+ *for some bullshit reason estposting the estimates clears the regression estimates
+ *save and restore don't work for some reason
+ quietly: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re 
  estpost margins,at(dlagcomp=(-200(25)200)) atmeans expression(exp(predict(xb)))
     putexcel A1=matrix(e(table), names) ///
 using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
@@ -103,7 +105,6 @@ using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
 
  eststo clear
  eststo: xi: xtnbreg compdeaths female mcap dcap i.year, re
-
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
@@ -116,9 +117,26 @@ using "H:/projects/malpractice/output/m1_dlagcomp_margins.xls", replace
 *http://www.statalist.org/forums/forum/general-stata-discussion/general/193879-first-difference-regression
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
-
  eststo: xi: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
-	eststo: xi: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
-
  
  esttab using "H:/projects/malpractice/output/hypothesis2-3.rtf", replace
+ 
+ ****************************
+ *marginal effects
+ ****************************
+ 
+ *h2
+ 
+quietly: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
+ margins, at(mlagmp=(5(20)200)) atmeans expression(exp(predict(xb))) 
+ marginsplot
+ 
+margins, at(dlagmp=(-60(20)120)) atmeans expression(exp(predict(xb))) 
+ marginsplot
+
+ *h3
+ quietly: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
+ margins, at(mdmp90=(0(.166666).5)) atmeans expression(exp(predict(xb))) 
+ marginsplot
+ 
+ 
