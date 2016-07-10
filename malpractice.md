@@ -6,6 +6,8 @@ bibliography: ./citations/malpractice.bib
 date: 7/10/2016
 ---
 
+```add working paper; add reference to grant; add abd jd and ma footnote```
+
 #Abstract
 
 
@@ -68,7 +70,7 @@ This study two sorts of publicly available administrative data available at the 
 
 These two files provide measures of cross-influence of malpractice claims related to mortality, and mortality directly related to complications of medical care. First, patient safety is operationalized as the number of deaths in a state due to *complications*, which is measured simply as the number deaths from complications of medical care in each state, each year. *Malpractice claims* are measured from the NPDB as the number of paid claims resulting from death (which amounts to approximately 1/3 of the paid claims in any given year). Because mortality and cause of death differ significantly between men and women, I distinguish between paid malpractice claims and deaths resulting from complications by gender, with *female* standing as a dummy indicator for women.
 
-*Tort Reform Controls.* To adjust for the malpractice and tort reform context in each state, I include a dummy variable  for each state and each year to indicate whether it has a damage cap for malpractice claims [@paik_receding_2013].
+*Changes in Malpractice Context.* To adjust for the malpractice and tort reform context in each state, I include a dummy variable  for each state and each year to indicate whether it has a damage cap for malpractice claims [@paik_receding_2013]. In addition ```add discussion of "spikes in mallpractice claims"```
 
 *Testing the Cross-Influence of Paid Malpractice Claims and Patient Safety.* In order to appropriately test the cross-influence of malpractice claims and patient safety on one another, estimated models include a time-lagged component. The most straightforward approach is to demean or use a first-difference estimator in the relevant models. This works in a straightforward manner for the association of malpractice claims to subsequent causes of death (hypotheses 2 and 3), because paid claims occuring in a particular year are immediately observable as are deaths related to medical complications.
 
@@ -77,6 +79,10 @@ For testing the association of patient safety on malpractice claims, the issue i
 There are a number of possible ways to adjust for this delay, including limiting the dataset and imputing values for the malpractice claims. In this study, I take a combined approach. First, I exclude all years past 2008, to ensure there is a sufficient time-delay for most of the claims. Second, I use the mean of complication mortality over a nubmer of years prior to the malpractice claim (*lagged complication mortality*). To identify the appropriate years, I calculate actual time-lags from the NPDB. The NPDB provides information on the date of the last event as well as the date of malpractice payment ("malyear in the codebook). Calculating the difference between the last known malpractice event and malpractice payment identifies the length of the time delay. 
 
 Figure 1 and Table 1 below identify the distribution and cumulative proportion of claims related to the time delay as observed in the NPDB. As illustrated below, while the mean is 4.63 years, the bulk of paid claims for mortality occurrence happen between 2 and 5 years after the occurrence (approximately 64% of the sample).  To correct for delayed observation of malpractice payments, models testing the influence of patient safety on paid malpractice claims (hypothesis 1 and 2) use the mean number of deaths related to complications from 2 to 5 years prior to year of the paid claims. This provides a smooth and sensible imputation for patient safety given the distributions pictured in Figure 1.
+
+\[Table 1 about here\]
+
+\[Figure 1 about here\]
 
 *Time Series Analysis.* Exploiting the panel nature of the data, I estimate hybrid random/fixed effects negative binomial models, adjusting for state and gender-specific effects [@allison_fixed_2009, pp. 65-68].
 
@@ -96,16 +102,42 @@ $$
 \beta_i = \lambda z_i + \gamma \bar{x}_{i \cdot} + \epsilon_i
 $$
 
-Where $y_{it}$ is the count of paid malpractice claims or deaths due to medical complications (dependent on the model) in year $t$ for state $i$. $g()$ represents the negative binomial link function (log-linear) described more fully in Allison [-@allison_fixed_2009, p. 61]. $x$ is a matrix of time-varying characterstics for each state, including the lagged value of paid malpractice claims or medical complications (depending on the model) and whether the state has a currently imposed damages cap (as a measure of tort reform measures within the state). $z$ is a matrix of fixed state characteristics, including a dummy variable series indicator for the patient gender and year fixed effects (to adjust for the declining trend of paid claims). This hybrid model identifies the *within-state* effects ($\delta$) over time, which indicate the predicted effect of a change in the relevant variable $x$ on any state $i$ with respect to the predicted count of paid malpractice claims or deaths due to medical complications. It also identifies the *between-state* effects at level 2, including a vector of effects for constant state characteristics along with a constant (intercept) effect ($\lambda$) and the between-state effects of time-varying variables ($\gamma$). The random errors of level two across states ($\epsilon_i$) are assumed to be distributed normally with mean 0 and variance $\tau^2$ [@raudenbush_hierarchical_2002]. These models are estimated using Stata's xtnbreg function.
+Where $y_{it}$ is the count of paid malpractice claims or deaths due to medical complications (dependent on the model) in year $t$ for state $i$. $g()$ represents the negative binomial link function (log-linear) described more fully in Allison [-@allison_fixed_2009, p. 61]. $x$ is a matrix of time-varying characterstics for each state, including the lagged value of paid malpractice claims or medical complications (depending on the model) and whether the state has a currently imposed damages cap (as a measure of tort reform measures within the state). $z$ is a matrix of fixed state characteristics, including a dummy variable series indicator for the patient gender and year fixed effects (to adjust for the declining trend of paid claims). This hybrid model identifies the *within-state* effects ($\delta$) over time, which indicate the predicted effect of a change in the relevant variable $x$ on any state $i$ with respect to the predicted count of paid malpractice claims or deaths due to medical complications. It also identifies the *between-state* effects at level 2, including a vector of effects for constant state characteristics along with a constant (intercept) effect ($\lambda$) and the between-state effects of time-varying variables ($\gamma$). The random errors of level two across states ($\epsilon_i$) are assumed to be distributed normally with mean 0 and variance $\tau^2$ [@raudenbush_hierarchical_2002]. These models are estimated using Stata's xtnbreg function. Notably, different modelling strategies, including a feasible generalized least squares esitmator, witin-state fixed effects estimators, and differing link functions (linear, poisson) all return similar substantive results.
 
 #Results
 
-Table 1 descriptives ... 
 
-medical malpractice in purely in legal studies. Or studies of medical errors for patient safety.
 
-Why COD is a good place to study:  (1) 1/3 of all malpractice payments are COD. Wrongful death is also highest payouts (confirm), and minimizes the barriers of small-scale claims. (2) practically, it includes the best large-scale data. Distinguish from state-level tests of hospital safety.
+no association from the table except both are declining. There is an increase in caps, a decrease in both comp and mal deaths consistent with 
 
+\[table 2 about here\]
+
+in contrast, the scatter plot shows clustering, suggestive of a correlation between these two. as noted above, this is in real time, though. Also, there is a count distribution with long tails suggestive of the nb model.
+
+\[figure 2 about here\]
+
+table 3 tests association between lagged complication mortality and malpractice claims. supports hypothesis 1
+
+also not damage cap differnece (but not in mean levels) --- consistent with __ and __ where damage caps have primarily a short term impact. IDs declining claims as shown by year fixed effects, and females have lower malpractice claims, but these are mediated by the lower number of comp deaths. (the gender difference also supports hypothesis 1). 
+
+\[table 3 about here\]
+
+note here that no need to directly control for population, because the r/e along with the mean level of complication deaths control for the relative size of population (or how the size might be related to both). 
+
+Note that the effects are relativley small w/differences between states in hundreds explaing only dozens . the difference is not plotted, but it is slightly smaller (and flatter). (mean diff is centered near 0), but there are observed swings of 100 in either direction also amouting to a few 5-10 (but note that this is potentially significatn given that the means max slightly over 30).
+
+\[figure 3 about here\] 
+
+table 4 tests assocition between malpractice claims and complicatoin mortality. hyp 2 is supported (also small) by model 2. hyp 3a is supported by model 3. hyb 3b is not supported
 
 #Discussion and Conclusion
 
+intro paragraph: set out to test simple assocition with cause of death
+
+there is a mutual association between both malpractice claims and deaths due to complications -- both in the same direction
+
+may well be that the declining trend in each is self-reenforcing
+
+limitations: no racial/age differences (b/c small). limited to death, and takes a gross example of wrongful death
+
+but it does show the usefulness of combining agency data

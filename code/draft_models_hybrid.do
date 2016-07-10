@@ -73,6 +73,8 @@ gen ddmp90 = dmp90-mdmp90
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
 eststo: xi: xtnbreg freq female mcap dcap i.year, re
+
+estat ic 
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 1: lower patient safety (large compdeaths) are associated with increased claims 
@@ -81,6 +83,8 @@ eststo: xi: xtnbreg freq female mcap dcap i.year, re
  eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
 	*estimates save h1
 	
+estat ic 
+
  ****************************
  *export table 1
  ****************************
