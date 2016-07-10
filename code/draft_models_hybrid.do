@@ -80,6 +80,13 @@ eststo: xi: xtnbreg freq female mcap dcap i.year, re
  
  eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
 	*estimates save h1
+
+***********************************
+*RELATIVE RATE TEST
+***********************************	
+	
+gen reldep = freq/lagcompdeaths
+xtnbreg freq female mcap dcap i.year, re
 	
  ****************************
  *export table 1
