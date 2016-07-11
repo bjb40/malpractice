@@ -119,11 +119,15 @@ estat ic
  eststo clear
  eststo: xi: xtnbreg compdeaths female mcap dcap i.year, re
  
+ estat ic
+ 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
  eststo: xi: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
+
+ estat ic
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 3: spike -- first difference models same as H2
@@ -131,6 +135,7 @@ estat ic
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
  eststo: xi: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
+estat ic 
  
  esttab using "H:/projects/malpractice/output/hypothesis2-3.rtf", replace
  
@@ -150,7 +155,7 @@ margins, at(dlagmp=(-60(20)120)) atmeans expression(exp(predict(xb)))
 
  *h3
  quietly: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
- quietly: margins, at(mdmp90=(0(.166666).5)) atmeans expression(exp(predict(xb))) 
+margins, at(mdmp90=(0(.166666).5)) atmeans expression(exp(predict(xb))) 
  marginsplot, xlabel(0(.166666).5) recast(line) recastci(rarea) ytitle(Predicted No. Deaths due to Med. Complications) 
 
  
