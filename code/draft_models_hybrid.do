@@ -1,5 +1,5 @@
 *dev Stata 14
-*models for draft submission to CELS
+*models including rate
 *Bryce Bartlett
 
 clear
@@ -26,11 +26,13 @@ replace stategender = statecode + 100 if female == 1
  egen mlagcomp = mean(lagcompdeaths), by(statecode)
  egen mcap = mean(cap), by(statecode)
  egen mlagmp = mean(lagmp), by(statecode)
+ egen mpop = mean(pop), by(statecode)
  
  *time-varying deviations from means
  gen dlagcomp = lagcompdeaths - mlagcomp
  gen dcap = cap - mcap
  gen dlagmp = lagmp - mlagmp
+ gen dpop = pop - mpop
  
  *******************************************************************************
  *******************************************************************************
@@ -72,7 +74,7 @@ gen ddmp90 = dmp90-mdmp90
 *Baseline malpractice claims
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
-eststo: xi: xtnbreg freq female mcap dcap i.year, re
+eststo: xi: xtnbreg freq female mpop mcap dpop dcap i.year, re
 
 estat ic 
  
@@ -80,7 +82,7 @@ estat ic
 *Hypothesis 1: lower patient safety (large compdeaths) are associated with increased claims 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
  
- eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
+ eststo: xi: xtnbreg freq mlagcomp mpop dlagcomp dpop female mcap dcap i.year, re
 	*estimates save h1
 	
 estat ic 
@@ -99,7 +101,7 @@ estat ic
 *  putexcel A1=matrix(e(table), names) ///
 *using "H:/projects/malpractice/output/m1_mlagcomp_margins.xls", replace
 
- quietly: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re 
+ quietly: xtnbreg freq mpop mlagcomp dpop dlagcomp female mcap dcap i.year, re 
  quietly: margins,at(mlagcomp=(25(25)500)) atmeans expression(exp(predict(xb)))
  marginsplot, xlabel(25(50)500) recast(line) recastci(rarea) ytitle(Predicted No. of Paid Claims) 
  
@@ -117,7 +119,7 @@ estat ic
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
  eststo clear
- eststo: xi: xtnbreg compdeaths female mcap dcap i.year, re
+ eststo: xi: xtnbreg compdeaths female mpop mcap dpop dcap i.year, re
  
  estat ic
  
@@ -125,7 +127,7 @@ estat ic
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
- eststo: xi: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
+ eststo: xi: xtnbreg compdeaths mpop mlagmp dpop dlagmp female mcap dcap i.year, re
 
  estat ic
  
@@ -134,7 +136,7 @@ estat ic
 *http://www.statalist.org/forums/forum/general-stata-discussion/general/193879-first-difference-regression
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
- eststo: xi: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
+ eststo: xi: xtnbreg compdeaths female mpop mcap dcap dpop mlagmp mdmp90 dlagmp ddmp90 i.year, re
 estat ic 
  
  esttab using "H:/projects/malpractice/output/hypothesis2-3.rtf", replace
@@ -145,7 +147,7 @@ estat ic
  
  *h2
  
-quietly: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
+quietly: xtnbreg compdeaths mlagmp dlagmp female mpop mcap dpop dcap i.year, re
  quietly: margins, at(mlagmp=(0(20)200)) atmeans expression(exp(predict(xb))) 
  marginsplot, xlabel(0(20)200) recast(line) recastci(rarea) ytitle(Predicted No. Deaths due to Med. Complications) 
  
@@ -154,7 +156,7 @@ margins, at(dlagmp=(-60(20)120)) atmeans expression(exp(predict(xb)))
  
 
  *h3
- quietly: xtnbreg compdeaths female mcap dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
+ quietly: xtnbreg compdeaths female mpop mcap dpop dcap mlagmp mdmp90 dlagmp ddmp90 i.year, re
 margins, at(mdmp90=(0(.166666).5)) atmeans expression(exp(predict(xb))) 
  marginsplot, xlabel(0(.166666).5) recast(line) recastci(rarea) ytitle(Predicted No. Deaths due to Med. Complications) 
 

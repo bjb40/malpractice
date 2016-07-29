@@ -192,10 +192,15 @@ dat = dat[dat$ptgender %in% c('M','F'),]
 #import compdeaths (state, year, gender,population)
 dat$compdeaths = as.numeric(NA)
 dat$pop = as.numeric(NA)
+dat$comprate = as.numeric(NA)
+dat$mprate = as.numeric(NA)
 
 #see notes for rationale: mean 2-5 years behind
 dat$lagcompdeaths = as.numeric(NA)
 dat$lagmp = as.numeric(NA)
+
+dat$lagcomprate = as.numeric(NA)
+dat$lagmprate = as.numeric(NA)
 
 for(r in 1:nrow(dat)){
   ob = dat[r,]
@@ -207,6 +212,8 @@ for(r in 1:nrow(dat)){
             compmort$Gender.Code == ob$ptgender
     dat[r,'compdeaths'] = compmort[mortob,'Deaths']
     dat[r,'pop'] = compmort[mortob,'Population']
+    dat[r,'comprate'] = compmort[mortob,'Deaths']/compmort[mortob,'Population']
+    dat[r,'mprate'] = dat[r,'Freq']/dat[r,'pop']
   }
   
     ys = (ob$year-2):(ob$year-5)
@@ -216,12 +223,15 @@ for(r in 1:nrow(dat)){
   #print(c(ys,mean(compmort[meanob,'Deaths'])))
     
     dat[r,'lagcompdeaths'] = mean(compmort[meanob & compmort$Year %in% ys,'Deaths'],na.rm=TRUE)
-
+    dat[r,'lagcomprate'] = dat[r,'lagcompdeaths']/mean(compmort[meanob & compmort$Year %in% ys,'Population'],na.rm=TRUE)
+    
     lagob = dat$State.Code == ob$State.Code & 
             dat$ptgender == ob$ptgender &
             dat$year == (ob$year - 1)
     if(sum(lagob) == 1){
-      dat[r,'lagmp'] = dat[lagob,'Freq'] }
+      dat[r,'lagmp'] = dat[lagob,'Freq']
+      dat[r,'lagmprate'] = dat[lagob,'mprate']
+      }
 }
 
 #@@@@@
