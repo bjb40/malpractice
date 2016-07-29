@@ -189,8 +189,9 @@ dat = dat[dat$year %in% 1999:2014,]
 dat = dat[dat$ptgender %in% c('M','F'),]
   missgender = full - sum(dat$Freq); print(missgender)
 
-#import compdeaths (state, year, gender)
+#import compdeaths (state, year, gender,population)
 dat$compdeaths = as.numeric(NA)
+dat$pop = as.numeric(NA)
 
 #see notes for rationale: mean 2-5 years behind
 dat$lagcompdeaths = as.numeric(NA)
@@ -205,6 +206,7 @@ for(r in 1:nrow(dat)){
             compmort$Year == ob$year & 
             compmort$Gender.Code == ob$ptgender
     dat[r,'compdeaths'] = compmort[mortob,'Deaths']
+    dat[r,'pop'] = compmort[mortob,'Population']
   }
   
     ys = (ob$year-2):(ob$year-5)
