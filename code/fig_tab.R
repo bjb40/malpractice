@@ -212,3 +212,11 @@ plot(dat$Freq,dat$compdeaths,
      xlab='Paid Malpractice Claims'
      )#,xlim=c(0,50),ylim=c(0,600))
 dev.off()
+
+#using rates
+#png(paste0(draftimg,'scatter.png'))
+plot(dat$mprate,dat$comprate, 
+     ylab='Deaths Due to Complications',
+     xlab='Paid Malpractice Claims'
+)#,xlim=c(0,50),ylim=c(0,600))
+#dev.off()
