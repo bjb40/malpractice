@@ -208,6 +208,7 @@ for(r in 1:nrow(dat)){
   }
   
     ys = (ob$year-2):(ob$year-5)
+    print(c('lag',ys))
     meanob = compmort$State.Code == ob$State.Code & 
       compmort$Gender.Code == ob$ptgender
     
@@ -311,3 +312,9 @@ save(dat,file=paste0(outdir,'private~/dat.rda'))
 
 #save as csv for use in stata
 write.csv(dat,paste0(outdir,'private~/analysis_dat.csv'))
+
+
+#lme4
+library(lme4)
+
+
