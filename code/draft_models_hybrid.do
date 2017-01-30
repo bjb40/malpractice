@@ -21,16 +21,22 @@ replace stategender = statecode + 100 if female == 1
  
  *allison conditional model
  *http://statisticalhorizons.com/fe-nbreg
- 
+  
  *individual specific means
  egen mlagcomp = mean(lagcompdeaths), by(statecode)
+ egen mlagrate = mean(lagrate), by(statecode)
+ egen mlagpop = mean(lagpop), by(statecode)
  egen mcap = mean(cap), by(statecode)
  egen mlagmp = mean(lagmp), by(statecode)
+ egen mlagmprate = mean(lagmprate), by(statecode)
  
  *time-varying deviations from means
  gen dlagcomp = lagcompdeaths - mlagcomp
+ gen dlagrate = lagrate - mlagrate
+ gen dlagpop = lagpop - mlagpop
  gen dcap = cap - mcap
  gen dlagmp = lagmp - mlagmp
+ gen dlagmprate = lagmprate - mlagmprate
  
  *******************************************************************************
  *******************************************************************************
@@ -57,10 +63,16 @@ gen ddmp90 = dmp90-mdmp90
  
  
  label variable mlagcomp "Deaths from Complications (Between)"
+ label variable mlagrate "Death Rate of Complications (Between)"
  label variable dlagcomp "Differnce in Deaths from Complications (Within)"
-
+ label variable dlagrate "Difference in Rate of Complications (Within)"
+ 
  label variable mlagmp "Paid Claims for Wrongful Death (Between)"
  label variable dlagmp "Difference in Paid Claims for Wrongful Death (Within)"
+ 
+ label variable mlagmp "Rate of Paid Claims for Wrongful Death (Between)"
+ label variable dlagmp "Difference in Rate of Paid Claims for Wrongful Death (Within)"
+ 
 
  label variable mdmp90 "Proportion of years Experiencing Spikes in Paid Claims (Between)"
  
@@ -72,9 +84,11 @@ gen ddmp90 = dmp90-mdmp90
 *Baseline malpractice claims
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
-eststo: xi: xtnbreg freq female mcap dcap i.year, re
+eststo: xi: xtnbreg freq dlagpop mlagpop female mcap dcap i.year, re
 
 estat ic 
+ 
+ xi:xtreg mprate female mcap dcap i.year, re
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 1: lower patient safety (large compdeaths) are associated with increased claims 
@@ -82,7 +96,13 @@ estat ic
  
  eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
 	*estimates save h1
-	
+
+ xi: xtnbreg freq mlagcomp dlagcomp mlagpop dlagpop female mcap dcap i.year, re
+ xi: xtreg freq mlagrate dlagrate female mcap dcap i.year, re
+ 
+ xi: xtreg mprate mlagrate dlagrate female mcap dcap i.year, re /*ns*/
+ 
+ 
 estat ic 
 
  ****************************
@@ -121,6 +141,9 @@ estat ic
  
  estat ic
  
+ xi: xtnbreg compdeaths dlagcomp mlagpop dlagpop female mcap dcap i.year, re
+ xi: xtreg rate female mcap dcap i.year, re
+ 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 2: increases in medmal claims are associated with deaths due to complications 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
@@ -128,6 +151,9 @@ estat ic
  eststo: xi: xtnbreg compdeaths mlagmp dlagmp female mcap dcap i.year, re
 
  estat ic
+
+ xi: xtnbreg compdeaths mlagpop dlagpop mlagmp dlagmp female mcap dcap i.year, re
+ xi: xtreg rate female mlagmp dlagmp mcap dcap i.year, re
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 3: spike -- first difference models same as H2

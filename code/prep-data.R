@@ -200,6 +200,9 @@ dat$lagrate = as.numeric(NA)
 dat$lagpop = as.numeric(NA)
 dat$lagmp = as.numeric(NA)
 
+dat$mprate = as.numeric(NA)
+dat$lagmprate = as.numeric(NA)
+
 for(r in 1:nrow(dat)){
   ob = dat[r,]
   if(ob$State.Code == 0 | any(is.na(ob[,c('year','State.Code','ptgender')]))){
@@ -224,11 +227,15 @@ for(r in 1:nrow(dat)){
     dat[r,'lagrate'] = mean(compmort[meanob & compmort$Year %in% ys,'Crude.Rate'],na.rm=TRUE)
     dat[r,'lagpop'] = mean(compmort[meanob & compmort$Year %in% ys,'Population'],na.rm=TRUE)
 
+    dat[r,'mprate'] = dat[r,'Freq']/(dat[r,'lagpop']/1000)
+    
     lagob = dat$State.Code == ob$State.Code & 
             dat$ptgender == ob$ptgender &
             dat$year == (ob$year - 1)
     if(sum(lagob) == 1){
-      dat[r,'lagmp'] = dat[lagob,'Freq'] }
+      dat[r,'lagmp'] = dat[lagob,'Freq']
+      dat[r,'lagmprate'] = dat[lagob,'mprate']
+      }
 }
 
 #@@@@@
