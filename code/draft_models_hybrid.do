@@ -64,7 +64,7 @@ gen ddmp90 = dmp90-mdmp90
  
  label variable mlagcomp "Deaths from Complications (Between)"
  label variable mlagrate "Death Rate of Complications (Between)"
- label variable dlagcomp "Differnce in Deaths from Complications (Within)"
+ label variable dlagcomp "Difference in Deaths from Complications (Within)"
  label variable dlagrate "Difference in Rate of Complications (Within)"
  
  label variable mlagmp "Paid Claims for Wrongful Death (Between)"
@@ -98,10 +98,17 @@ estat ic
 	*estimates save h1
 
  xi: xtnbreg freq mlagcomp dlagcomp mlagpop dlagpop female mcap dcap i.year, re
- xi: xtreg freq mlagrate dlagrate female mcap dcap i.year, re
  
+ xi: xtnbreg freq mlagcomp dlagcomp lagpop female mcap dcap i.year, re
+ xi: xtreg freq mlagcomp dlagcomp lagpop female mcap dcap i.year, re
+ 
+ 
+ xi: xtnbreg freq mlagrate dlagrate lagpop female mcap dcap i.year, re
+ xi: xtreg freq mlagrate dlagrate lagpop female mcap dcap i.year, re
+ 
+ 
+ xi: xtpoisson mprate mlagrate dlagrate female mcap dcap i.year, re /*ns*/
  xi: xtreg mprate mlagrate dlagrate female mcap dcap i.year, re /*ns*/
- 
  
 estat ic 
 
@@ -154,6 +161,8 @@ estat ic
 
  xi: xtnbreg compdeaths mlagpop dlagpop mlagmp dlagmp female mcap dcap i.year, re
  xi: xtreg rate female mlagmp dlagmp mcap dcap i.year, re
+ xi: xtreg lrate female mlagmprate dlagmprate mcap dcap i.year, re /* ns */
+ 
  
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 3: spike -- first difference models same as H2
