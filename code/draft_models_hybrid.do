@@ -90,6 +90,53 @@ estat ic
  
  xi:xtreg mprate female mcap dcap i.year, re
  
+ *neg assoc
+ reg mprate lagrate female mcap dcap i.year
+ reg rate lagmprate female mcap dcap i.year
+  
+ *no assoc
+ xi: xtreg rate mprate female cap i.year, fe
+ xi: xtreg mprate rate female cap i.year, fe
+ 
+egen popwt = sum(pop/1000), by(statecode)
+gen spopwt = popwt / sum(popwt)
+ 
+ xtmixed lrate mlagmprate dlagmprate female dcap mcap ///
+          year c.year#c.mlagmprate c.year#c.dlagmprate [weight=spopwt] || statecode: year
+		  
+ xtmixed lmprate mlagrate dlagrate female dcap mcap ///
+          year c.year#c.mlagrate c.year#c.dlagrate [weight=spopwt] || statecode: year
+ 
+ *no assoc
+ xi: xtreg rate lagmprate female cap i.year, fe
+ xi: xtreg mprate lagrate female cap i.year, fe
+ 
+ gen lmprate = log(mprate)
+ gen lrate = log(rate)
+ 
+ xi: xtreg lrate mprate female cap i.year, fe
+ xi: xtreg lmprate rate female cap i.year, fe
+
+ 
+ *hybrid 
+ egen mrate = mean(rate), by(statecode)
+ egen mmprate = mean(mprate), by (statecode)
+ 
+ gen drate = rate - mrate
+ gen dmprate = mprate - mmprate
+ 
+ *no association
+ xi: xtreg rate dmprate mmprate female mcap dcap i.year, re
+ xi: xtreg mprate drate mrate female mcap dcap i.year, re 
+ 
+ xi: xtreg rate dmprate mmprate female mcap dcap i.year, re
+ xi: xtreg mprate drate mrate female mcap dcap i.year, re 
+ 
+ xi: xtpoisson rate dmprate mmprate female mcap dcap i.year, re
+ xi: xtpoisson mprate drate mrate female mcap dcap i.year, re 
+ 
+ 
+ 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 *Hypothesis 1: lower patient safety (large compdeaths) are associated with increased claims 
 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
@@ -97,18 +144,30 @@ estat ic
  eststo: xi: xtnbreg freq mlagcomp dlagcomp female mcap dcap i.year, re
 	*estimates save h1
 
- xi: xtnbreg freq mlagcomp dlagcomp mlagpop dlagpop female mcap dcap i.year, re
+ xi: xtnbreg freq mlagrate dlagrate llagpop female mcap dcap i.year, re
  
  xi: xtnbreg freq mlagcomp dlagcomp lagpop female mcap dcap i.year, re
  xi: xtreg freq mlagcomp dlagcomp lagpop female mcap dcap i.year, re
  
+ egen mpop=mean(pop), by(statecode)
+ gen dpop = pop-mpop
  
- xi: xtnbreg freq mlagrate dlagrate lagpop female mcap dcap i.year, re
- xi: xtreg freq mlagrate dlagrate lagpop female mcap dcap i.year, re
+ *works
+ xi: xtpoisson freq mlagrate dlagrate mlagpop dlagpop female mcap dcap i.year, re
+ *won't converge
+ xi: xtpoisson rate mlagmprate dlagmprate mpop dpop female mcap dcap i.year, re
+ 
+ 
+ xi: xtreg freq mlagrate dlagrate mlagpop dlagpop female mcap dcap i.year, re
  
  
  xi: xtpoisson mprate mlagrate dlagrate female mcap dcap i.year, re /*ns*/
  xi: xtreg mprate mlagrate dlagrate female mcap dcap i.year, re /*ns*/
+ 
+ gen llagpop = log(lagpop)
+ 
+ xi: xtnbreg freq mlagrate dlagrate llagpop female mcap dcap i.year, re /*ns*/
+ 
  
 estat ic 
 

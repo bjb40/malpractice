@@ -179,7 +179,7 @@ for(r in fips$fips){
 print(unique(npdbtab$workstat[npdbtab$State.Code==0]))
 
 #delete observations with death prior to 1999 and unknown gender
-dat = npdbtab; rm(npdbtab,tst,npdb.death)
+dat = npdbtab; #rm(npdbtab,tst,npdb.death)
   full = sum(dat$Freq); print(full)
 
 dat$year = as.numeric(levels(dat$year))[dat$year]
