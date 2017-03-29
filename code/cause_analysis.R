@@ -56,9 +56,23 @@ choro=merge(pltdat %>%
             )
 choro = choro[order(choro$order),]
 map.plot = qplot(long,lat,data=choro,group=group,fill=prop_notreat,
-      geom='polygon')
+      geom='polygon') + theme(legend.position='bottom')
 
 print(map.plot)
+ggsave('test.pdf') #need to adjust size based on 1:1 scale for lat and long
 Sys.sleep(5)
 
 }
+
+library(maps)
+library(ggmap)
+home= geocode('2137 Old Oxford Road East, Chapel Hill, NC',output='latlon')
+
+nc=map_data('county') %>% filter(region=='north carolina')
+nc=nc[order(nc$order),]
+
+ggplot(nc,aes(long,lat,group=group)) + 
+  geom_polygon(fill=NA,color='black') +
+  geom_point(data=home,aes(lon,lat,group=NA)) + 
+  geom_text(data=home,aes(lon+.24,lat,label=name,group=NA),size=3)
+
