@@ -121,12 +121,13 @@ sum(mallag>10)/length(mallag) #5% greater than 10
 #the bottom of the text file contains relevant information regarding selection
 #@@@@@@@@@@@@@@@@@@@@@
 
-#sliced by state, gender, 10 year age groups
-allmort = read.table("H:/Academic Projects/Data Files/NVSS/wonder_mortality/MCD-state-1999-2014.txt",
-                     sep='\t',nrows=19584,header=TRUE, #stop at line 19585; remainder of file includes sel params
+#sliced by state, gender, 5 year age groups
+allmort = read.table("H:/Academic Projects/Data Files/NVSS/wonder_mortality/mcd-1999-2015-5ya.txt",
+                     sep='\t',nrows=39882,header=TRUE, #stop at line 39882; remainder of file includes sel params
                      na.strings = c('Supressed','Not Applicable','Unreliable'), stringsAsFactors=FALSE)
 
 allmort$Deaths = as.numeric(allmort$Deaths)
+
 
 #sliced by state, gender, and only includes deaths from complications of medical care (specific 113 COD)
 compmort = read.table("H:/Academic Projects/Data Files/NVSS/wonder_mortality/MCD-state-compl-1999-2014.txt",
