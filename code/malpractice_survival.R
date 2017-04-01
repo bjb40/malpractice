@@ -7,7 +7,7 @@
 
 #need: npdb.death, fips, and allmort form prep-data
 
-library(dplyr); library(reshape2); library(ggplot2)
+library(dplyr); library(reshape2); library(ggplot2); library(lme4)
 
 #@@@@
 #Create dataset
@@ -254,14 +254,105 @@ sub.comp = compmort %>%
 
 dat=merge(dat,sub.comp) %>% mutate(comprate=compdeaths/deaths)
 
-#####model
+#prepare crude rates and lx (i.e. deaths at risk of becoming paid claims)
+dat = dat %>%
+  group_by(malyear,name,ptgender) %>%
+  arrange(claimage) %>%
+  mutate(lx.mal=lag(deaths-cumsum(paid),order_by=claimage),
+         lx.mal=ifelse(is.na(lx.mal),deaths,lx.mal),
+         mx.mal=paid/(lx.mal)) #need to fix to the average
+
+
+#@@@@@@@@@@@
+#####model---
 #http://stats.stackexchange.com/questions/89734/glm-for-proportion-data-in-r
 
-m1=glm(cbind(paid,(deaths))~claimage + I(claimage^2),
+biv=glm(cbind(paid,lx.mal)~factor(claimage) + I(comprate*1000) + factor(malyear),
+        family=binomial(logit),data=dat)
+
+print(summary(biv))
+
+m1=glm(cbind(paid,lx.mal)~factor(claimage) + cap,
        family=binomial(logit),data=dat)
+
+pred.m1=data.frame(predict.glm(m1,se.fit=TRUE,type='response'))
+pred.m1$claimage=m1$model[['factor(claimage)']]
+pred.m1$cap=m1$model$cap
+
+#confirm this is okay or use delta method from network project...
+pred.m1=unique(pred.m1) %>% 
+  mutate(upper=fit+1.96*se.fit,
+         lower=fit-1.96*se.fit)
+
+pred.plt = ggplot(pred.m1,aes(x=as.numeric(claimage),y=fit,color=factor(cap))) + 
+  geom_line() +  
+  geom_ribbon(aes(ymin=lower,ymax=upper,fill=factor(cap)),alpha=0.2)
+print(pred.plt)
+
+m2=glm(cbind(paid,lx.mal)~ factor(claimage) + cap + factor(malyear) +
+        I(comprate*1000) + ptgender + name,
+       family=binomial(logit),data=dat)
+
+print(summary(m2))
+
+#mean time-frame stuff
+hlm = glmer(cbind(paid,lx.mal)~ 
+        factor(claimage) + cap + I(comprate*1000) + ptgender + 
+        (1|name),
+      family=binomial(logit),data=dat)
 
 #@@@@@@@@@@@@@@@@@@@@@
 #prep analytic models with compmort
 #@@@@@@@@@@@@@@@@@@@@@
 
+comp.dat=dat
+comp.dat$predmal = predict.glm(m2,type='response')
+comp.dat$predmal.hlm = inv.logit(predict(hlm))
 
+comp.dat = comp.dat %>% 
+  group_by(name,ptgender,malyear,abb,fips,captype) %>%
+  summarize(deaths=mean(deaths),
+            compdeaths=mean(compdeaths),
+            predmal.hlm=sum(predmal.hlm),
+            predmal=sum(predmal))
+
+comp.dat = comp.dat %>% 
+  group_by(malyear,ptgender) %>% 
+  arrange(malyear) %>% 
+  mutate(predlag=lag(predmal))
+
+m1c=glm(cbind(compdeaths,deaths)~ predmal.hlm,
+        family=binomial(logit),data=comp.dat)
+print(summary(m1c))
+  
+m2c=glm(cbind(compdeaths,deaths)~ captype + factor(malyear) +
+          predmal + ptgender + name,
+        family=binomial(logit),data=comp.dat)
+
+print(summary(m2c))
+
+hlmc = glmer(cbind(compdeaths,deaths)~ captype + factor(malyear) +
+               I(predmal*1000) + ptgender + (1|name),
+             family=binomial(logit),data=comp.dat)
+
+summary(hlmc)
+
+#############3
+#maps adjunct
+"
+library(maps)
+map.dat = merge(map_data('state') %>% rename(name=region),
+      dat %>% 
+        group_by(name,malyear,captype,cap) %>% 
+        summarize(comprate=mean(comprate)) %>% 
+        ungroup %>%
+        mutate(name=tolower(name)),
+      by='name')
+
+for(y in unique(map.dat$malyear)){
+map.plot=ggplot(map.dat[map.dat$malyear==y,],aes(long,lat,group=group)) + 
+  geom_polygon(aes(fill=comprate,color=factor(captype)),size=1.3,linetype=3)
+
+print(map.plot); Sys.sleep(5)
+}
+"
