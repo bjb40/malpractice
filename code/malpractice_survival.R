@@ -159,6 +159,7 @@ analyze = analyze %>%
 
 #constant deaths
 ggplot(analyze.sum,aes(x=claimage,y=deaths/1000,color=factor(malyear))) + geom_line() + facet_grid(~captype)
+ggsave(paste0(draftimg,'constant-deaths.pdf'))
 #paid claims...
 ggplot(analyze.sum,aes(x=claimage,y=(paid/(deaths/1000)),color=factor(malyear))) + geom_line() + facet_grid(~captype)
 
@@ -218,18 +219,46 @@ print(summary(analyze$mx.mal))
 #will just drop all missing for now... should prep proportion missing, though
 #summarize and ignore age....
 
-tmp = analyze %>% filter(malyear>=2004,!is.na(fips)) %>%
-  group_by(abb,ptgender,malyear,fips,name,claimage,paidyear,switchcap,cap,captype) %>%
-  summarize(paid=sum(paid,na.rm=TRUE),deaths=sum(deaths,na.rm=TRUE))
+npdb = npdb.sum %>% filter(malyear>=2004) %>%
+  group_by(abb,ptgender,malyear,claimage,paidyear) %>%
+  summarize(paid=sum(paid,na.rm=TRUE))
 
-dat = tmp %>% filter(malyear==1)
+mort=mort %>% 
+  group_by(name,ptgender,malyear,fips) %>%
+  summarize(deaths=sum(deaths))
+
+datnames=c(colnames(npdb),colnames(mort))
+dat = setNames(replicate(length(datnames),numeric(0), simplify = F), datnames)
 
 ###prep with structural zeros
 for(y in unique(analyze.model$malyear)){
   for(p in 2004:2015){
-   subdat = tmp %>% filter(malyear==y,paidyear==p) 
+  if(p<y){next}
+   subdat = npdb %>% filter(malyear==y,paidyear==p)
+   submort = mort %>% filter(malyear==y)
+   submort=merge(submort,fips,by=c('name','fips'))
+   t = merge(subdat,submort,all=TRUE)
+   t = t %>% filter(!is.na(fips)) %>%
+     mutate(paidyear=p,
+            claimage=paidyear-malyear,
+            paid=ifelse(is.na(paid),0,paid))
+   
+   dat=rbind(dat,t)
   }
 }
+
+dat=merge(dat,state.dat)
+sub.comp = compmort %>% 
+  rename(malyear=Year,ptgender=Gender.Code,compdeaths=Deaths,name=State) %>% 
+  select(malyear,ptgender,name,compdeaths)
+
+dat=merge(dat,sub.comp) %>% mutate(comprate=compdeaths/deaths)
+
+#####model
+#http://stats.stackexchange.com/questions/89734/glm-for-proportion-data-in-r
+
+m1=glm(cbind(paid,(deaths))~claimage + I(claimage^2),
+       family=binomial(logit),data=dat)
 
 #@@@@@@@@@@@@@@@@@@@@@
 #prep analytic models with compmort
