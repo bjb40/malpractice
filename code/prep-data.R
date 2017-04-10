@@ -310,7 +310,7 @@ dat$nocap = dat$switchcap = dat$oldcap = 0
   dat$oldcap[dat$State.Name %in% names(oldcap)] = 1
 
 dat$cap = 0
-allcap = c(nocap,switchcap,oldcap); rm(nocap,switchcap,oldcap)
+allcap = c(nocap,switchcap,oldcap); #rm(nocap,switchcap,oldcap)
 for(s in 1:length(allcap)){
   dat$cap[dat$State.Name == names(allcap)[s] & dat$year %in% allcap[[s]]] = 1
 }
