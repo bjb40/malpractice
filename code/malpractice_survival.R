@@ -166,8 +166,23 @@ analyze = analyze %>%
 ggplot(analyze.sum,aes(x=claimage,y=deaths/1000,color=factor(malyear))) + geom_line() + facet_grid(~captype)
 ggsave(paste0(draftimg,'constant-deaths.pdf'))
 #paid claims...
-ggplot(analyze.sum,aes(x=claimage,y=(paid/(deaths/1000)),color=factor(malyear))) + geom_line() + facet_grid(~captype)
-ggsave(paste0(draftimg,'malpractice-px.pdf'))
+
+ggplot(analyze.sum,aes(x=claimage,y=(paid/(deaths/1000)),color=factor(malyear))) + 
+  geom_line() +
+  facet_grid(~captype) + 
+  ylab('Paid Claims per 1,000 Deaths') +
+  xlab('Age of Claim') +
+  theme_minimal() +
+  labs(title='Unadjusted malpractice rates across year and damage caps.',
+        subtitle='Adoption of state damage caps over period: 
+Never a cap ("nocap"), always a cap ("oldcap"), change in cap status ("switchcap").') + 
+  theme(legend.title=element_blank())
+
+#for paa poster
+ggsave(paste0(draftimg,'malpractice-px.png'),
+       height=10,width=18,dpi=200,units='in')
+
+#ggsave(paste0(draftimg,'malpractice-px.pdf'))
 
 
 #####twiter print
@@ -192,10 +207,20 @@ ggsave(paste0(draftimg,'cum-malpractice-px.jpg'),
        units='cm',dpi=300)
 
 comptrend.plt = ggplot(analyze.sum %>% group_by(malyear,captype) %>% summarize(comprate=mean(comprate)),
-       aes(x=malyear,y=comprate,color=captype)) + geom_line() 
+       aes(x=malyear,y=comprate,color=captype)) + 
+  geom_line() +
+  ylab('Proportion of Deaths from Complications of Medical Care (per 1,000 deaths)') +
+  labs(title='Trend in proportions of death due to medical complications',
+       subtitle='Sliced by state tort reform characteristics.') +
+  xlab('Year') +
+  theme_classic()
 
 print(comptrend.plt)
-ggsave(paste0(draftimg,'comprate.pdf'))
+
+ggsave(paste0(draftimg,'comprate.png'),
+       height=10,width=18,units='in',dpi=200)
+
+#ggsave(paste0(draftimg,'comprate.pdf'))
 
 #(re)prepare crude malpractice rates
 
@@ -292,9 +317,9 @@ dat = dat %>%
 #AHRF -- load data
 #@@@@@@@@@@@
 #require(RevoScaleR)
-ahrf.zip = 'H:/Academic Projects/Data Files/HRSA/ARF/AHRF_SN_2015-2016.zip'
-ahrf = unzip(ahrf.zip)
-ahrf.dat = read.table(list.files(pattern='.asc'))
+#ahrf.zip = 'H:/Academic Projects/Data Files/HRSA/ARF/AHRF_SN_2015-2016.zip'
+#ahrf = unzip(ahrf.zip)
+#ahrf.dat = read.table(list.files(pattern='.asc'))
 
 #@@@@@@@@@@@
 #####model---
@@ -365,8 +390,8 @@ hlm = glmer(cbind(paid,lx.mal)~
 print(summary(hlm))
 
 hlma = glmer(cbind(paid,lx.mal)~ 
-              claimage + I(claimage^2) + I(claimage^3) + 
-               r_cn + r_cp + r_ct + r_sr + r_cs + r_pe + r_pp + r_cf + r_js +r_pcf + r_cmpf +
+              I(claimage/10) + I((claimage/10)^2)  + 
+               captype +
                I(comprate*1000) + ptgender +
               I(malyear-2009) +
               (1|name),
@@ -428,11 +453,20 @@ comp.dat = comp.dat %>%
   mutate(predlag=lag(predmal))
 
 predmal.plt = ggplot(comp.dat,aes(x=predmal*1000,y=(compdeaths/(deaths/1000))
-                    ,color=captype),
+                    ,color=malyear, shape=captype),
                      group=name) + 
   geom_point() + 
-  facet_wrap(~malyear,nrow=3) 
+  facet_wrap(~name) 
 print(predmal.plt)
+
+spag.plt = ggplot(comp.dat %>% filter(ptgender=='F'),aes(x=predmal*1000,y=(compdeaths/(deaths/1000)))) + 
+  geom_line(aes(group=name),stat='smooth',method='lm',alpha=.25,size=1.2) +
+  geom_point(aes(color=malyear), alpha=.55) + 
+  theme_minimal()
+print(spag.plt)
+
+ggsave(spag.plt,filename=paste0(draftimg,'spag.pdf'))
+
 
 m1c=glm(cbind(compdeaths,deaths)~ predlag + I(malyear-2009),
         family=binomial(logit),data=comp.dat)
@@ -504,14 +538,15 @@ predFun = function(fit){
 
 #u is the spherical errors on the random effects; use.u means not to draw new effects
 #use.u=FALSE, means to integrate over the uncertainty in 'u' (theoretically)
-bb=bootMer(hlmc,nsim=200,FUN=predFun,use.u=TRUE,ncpus=4)
-predict$pred=predict(hlmc,predict,type='response')
-predict$up=apply(bb$t,2,quantile,prob=0.975)
-predict$down=apply(bb$t,2,quantile,prob=0.025)
+#bb=bootMer(hlmc,nsim=200,FUN=predFun,use.u=TRUE,ncpus=4)
+#predict$pred=predict(hlmc,predict,type='response')
+#predict$up=apply(bb$t,2,quantile,prob=0.975)
+#predict$down=apply(bb$t,2,quantile,prob=0.025)
 
-ggplot(predict,aes(x=predlag*1000,y=pred*1000,color=captype)) + geom_line(linetype=2) +
-  geom_ribbon(aes(ymin=down*1000,ymax=up*1000,fill=captype),alpha=0.05)
+#ggplot(predict,aes(x=predlag*1000,y=pred*1000,color=captype)) + geom_line(linetype=2) +
+#  geom_ribbon(aes(ymin=down*1000,ymax=up*1000,fill=captype),alpha=0.05)
 
+#save()
 
 #############
 #maps adjunct

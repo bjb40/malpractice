@@ -110,4 +110,39 @@ dic = function(stanfit){
   return(list (dic=dic, elpd_dic=elpd_dic,logdev=ldev, pdic=pdic))
 }
 
+###mis bayesian funcitons
+
+#helper function for tables
+eff = function(s,c){
+  # calculates mean effect from posterior sample and 95%CI
+  #
+  # Args:
+  #   s: a series of posterior samples
+  #   c: a number betwen 0 and 1 for confidence; .95 is default
+  #
+  # Returns:
+  #   a named vector including mean, lower ci, upper ci
+  
+  e = mean(s)
+  names(e)='mean'
+  #calculate probs
+  if(missing(c)){c=.95}
+  l=(1-c)/2
+  u=1-((1-c)/2)
+  
+  interval = quantile(s,prob=c(l,u))
+  return(c(e,interval))
+}
+
+
+#helper function for printing
+printeff = function(s,c){
+  #returns string of the form "mean posterior [lower post,upper post]"
+  #Input: s = a series of posterior samples,c = confidence pval (0-1)
+  #see function (eff) for more info
+  #output is string
+  e = rnd(eff(s,c))
+  return(cat(e[1],'<br>[',paste(e[2],e[3],sep=','),']',sep=''))
+}
+
 
