@@ -190,36 +190,125 @@ comp.hlm2 = glmer(cbind(compdeaths,deaths)~ ptgender +
 summary(comp.hlm2)
 
 
-#####
-#plot fits
-mal.pred = predictInterval(mal.hlm2,predict.bt,
-                     which='fixed',
-                     type='probability',
-                     returnSims=TRUE)
+#######
+#results plots -- 2 maps and a bar chart with between within
 
-predict.bt$fit = mal.pred$fit
-predict.bt$up = mal.pred$upr
-predict.bt$low = mal.pred$lwr
+mal.pred = predictInterval(mal.hlm2,
+                              mal.dat,
+                              which='full',
+                              type='probability')
+mal.dat$fit = mal.pred$fit
+mal.dat$upr = mal.pred$upr
+mal.dat$lwr = mal.pred$lwr
 
-ggplot(predict.bt %>% filter(claimage_d>-2 & claimage_d<1),
-       aes(x=comprate_d,
-           y=fit,
-           color=factor(claimage_d),
-           group=claimage_d)) +
-  geom_line() 
 
-#sum over claimage
-mal.sim = cbind(predict.bt[,'comprate_d'],
-                data.frame(
-                  inv.logit(attr(mal.pred,'sim.results')))
-                )%>% 
-  group_by(comprate_d) %>% 
-  summarize_each(funs(sum(.)))
+noaxis =   theme(axis.title=element_blank(),
+                 axis.text=element_blank(),
+                 axis.ticks=element_blank(),
+                 axis.line = element_blank()) + coord_equal(ratio=1)
 
-test = cbind(data.frame(t(apply(mal.sim[,2:ncol(mal.sim)],1,eff))),comprate_d=-7:7)
 
-ggplot(test,aes(x=comprate_d,y=mean)) +
-  geom_line() + geom_point() +
-  geom_ribbon(aes(ymin=X2.5.,
-                  ymax=X97.5.), alpha=0.25)
+####
+#malpractice map 2009
+mal.map = mal.dat %>% 
+  filter(malyear==2009,ptgender=='M') %>% 
+  group_by(name,captype) %>%
+  summarize(fit=sum(fit))
+
+library(maps)
+mal.map = merge(map_data('state') %>% rename(name=region),
+                mal.map %>% 
+                  group_by(name,captype) %>% 
+                  ungroup %>%
+                  mutate(name=tolower(name)),
+                by='name')
+
+mal.plot=ggplot(mal.map,aes(long,lat,group=group)) + 
+    geom_polygon(aes(fill=fit,color=factor(captype)),size=1.3,linetype=3) + 
+  theme_classic() + + coord_equal(ratio=1) +
+  scale_fill_continuous(name='Pred. Rate') +
+  scale_color_discrete(name='')
+
+print(mal.plot+noaxis+labs(title='Predicted 10-Year Malpractice Rates',
+                           caption='Full model, for Deaths in 2009'))
+
+ggsave(filename=paste0(draftimg,'malmap.png'),
+       h=10,w=18,units='in',dpi=200)
+
+######
+#iatrogenic fit stats
+comp.pred = predictInterval(comp.hlm2,
+                           comp.dat,
+                           which='full',
+                           type='probability')
+comp.dat$fit = comp.pred$fit
+comp.dat$upr = comp.pred$upr
+comp.dat$lwr = comp.pred$lwr
+
+  
+####
+#iatrogenic map 2009
+comp.map = comp.dat %>% 
+  filter(paidyear==2009,ptgender=='M') %>% 
+  group_by(name) %>%
+  summarize(fit=sum(fit))
+
+comp.map = merge(map_data('state') %>% rename(name=region),
+                comp.map %>% 
+                  group_by(name) %>% 
+                  ungroup %>%
+                  mutate(name=tolower(name)),
+                by='name')
+
+comp.plot=ggplot(comp.map,aes(long,lat,group=group)) + 
+  geom_polygon(aes(fill=fit),color='grey',size=.5) +
+  theme_classic() +
+  scale_fill_gradient(name='Pred. Rate',low=muted('red'),high='red')
+
+print(comp.plot+noaxis+labs(title='Predicted Complications Rates',
+                           caption='Full model, for Deaths in 2009'))
+
+ggsave(filename=paste0(draftimg,'compmap.png'),
+       h=10,w=18,units='in',dpi=200)
+
+####
+#barplots of between and within
+
+
+mal.sim = FEsim(mal.hlm2,n.sims=200)
+plotFEsim(mal.sim[6:7,])
+
+comp.sim = FEsim(comp.hlm2,n.sims=200)
+plotFEsim(comp.sim[6:7,])
+
+sim=rbind(mal.sim[6:7,],comp.sim[6:7,])
+sim$term = as.character(levels(sim$term)[sim$term]); sim$mal=TRUE
+sim[1,'term'] = 'Within-State Complications Rate'
+sim[2,'term'] = 'Between-State Complications Rate'
+sim[3,'term'] = 'Within-State Malpractice Rate'; sim[3,'mal']=FALSE
+sim[4,'term'] = 'Between-State Malpractice Rate'; sim[4,'mal']=FALSE
+
+plt1 = plotFEsim(sim[1:2,],oddsRatio=TRUE) + 
+  ylim(0.9,1.3) +
+  labs(title='Effect on Malpractice Rate') +
+  theme(axis.text.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        plot.title=element_text(hjust=1)
+  )
+
+plt2 = plotFEsim(sim[3:4,],oddsRatio=TRUE) + 
+  ylim(0.9,1.3) +
+  labs(title='Effect on Complications Rate') +
+  ylab('Odds Ratio') +
+  theme(axis.title.y = element_blank(),
+        plot.title=element_text(hjust=1))
+
+library(gridExtra)
+
+png(filename=paste0(draftimg,'effs.png'),
+    height=10,width=19,units='in',res=200)
+  grid.arrange(plt1,plt2,nrow=2)
+dev.off()
+
 
