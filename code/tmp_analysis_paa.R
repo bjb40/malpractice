@@ -3,19 +3,19 @@
 
 ##data manipulation for hlm model
 #calculate mean, lag and difference
+
+dat = dat %>% ungroup
+
 mal.dat = dat %>% 
   select(name,claimage,captype,deaths,n_reform,cap,
-         compdeaths,comprate,paid,paidyear, lx.mal) %>%
+         compdeaths,comprate,paid,paidyear, lx.mal,
+         starts_with('r_')) %>%
   group_by(name,ptgender) %>%
   arrange(malyear) %>%
   mutate_each(funs(mn=mean(.,na.rm=TRUE), 
                    lag=lag(.,order_by=malyear),
                    d=mean(.,na.rm=TRUE) - .),
               -captype,-name,-ptgender,-lx.mal)
-
-
-
-
 
 ###
 #malpractice model
@@ -68,6 +68,40 @@ mal.hlm2 = glmer(cbind(paid,lx.mal)~ ptgender +
              family=binomial(logit),data=mal.dat)
 
 summary(mal.hlm2)
+
+
+form = paste('cbind(paid,lx.mal)~ ptgender +
+                   I(claimage_d/10) + I((claimage_d/10)^2) +
+                   + I(malyear-2009) + 
+                   I(comprate_d*1000) + I(comprate_mn*1000) +', 
+                    paste(paste0(reform,'_mn'),collapse='+'),'+',
+                    paste(paste0(reform,'_d'),collapse='+'),
+                   '+(1|name)')
+
+form2 = paste('cbind(paid,lx.mal)~ ptgender +
+                   I(claimage_d/10) + I((claimage_d/10)^2) +
+                   + I(malyear-2009) + 
+                   I(comprate_d*1000) + I(comprate_mn*1000) +', 
+             paste(reform,collapse='+'),
+             '+(1|name)')
+
+###new model for presentation
+#rank deficiency for a number of 
+mal.hlm3 = glmer(form2,
+                 family=binomial(logit),data=mal.dat)
+
+summary(mal.hlm3)
+
+mal3.sim = FEsim(mal.hlm3,n.sims=200)
+reform.eff = grepl('r_',mal3.sim$term)
+levels(mal3.sim$term)[reform.eff] = reform.names[order(sort(reform))]
+plotFEsim(mal3.sim[reform.eff,],oddsRatio=TRUE) + 
+  labs(title='Effect of Tort Reform on Paid Claim Rates.') +
+  ylab('Odds Ratio') +
+  theme(axis.title.y = element_blank(),
+        plot.title=element_text(hjust=1))
+
+ggsave(paste0(draftimg,'reform-mprates.pdf'))
 
 #generate predicted data for plotting fit
 #pick 3 random states
@@ -130,14 +164,13 @@ ggplot(pr,aes(x=comprate_d*1000,y=pred*1000)) +
 #compdeaths model
 #collapse by paidyear...
 ###
-
+dat=dat %>% ungroup
 comp.dat = dat %>% 
-  select(name,ptgender,captype,cap,paid,paidyear,n_reform) %>%
+  dplyr::select(name,ptgender,captype,cap,paid,paidyear,n_reform,starts_with('r_')) %>%
   filter(paidyear<=2014) %>%
-  group_by(name,ptgender,paidyear,captype) %>%
-  summarize(paid=sum(paid),
-            n_reform=mean(n_reform),
-            cap=mean(cap))
+  group_by(name,ptgender,paidyear) 
+
+tst = summarize_at(comp.dat,vars(cap,paid,n_reform,starts_with('r_')),funs(mean(.,na.rm=TRUE)))
 
 comp.dat_m = dat %>%
   group_by(name,ptgender,malyear) %>%
@@ -156,7 +189,7 @@ comp.dat = comp.dat %>%
   mutate_each(funs(mn=mean(.,na.rm=TRUE), 
                    lag=lag(.,order_by=paidyear),
                    d=mean(.,na.rm=TRUE) - .),
-             n_reform,paidrate,cap)
+             n_reform,paidrate,cap,starts_with('r_'))
 
 comp.m1 = glm(cbind(compdeaths,deaths)~ ptgender +
                I(paidyear-2009) + n_reform_d + n_reform_mn + name,
@@ -189,6 +222,13 @@ comp.hlm2 = glmer(cbind(compdeaths,deaths)~ ptgender +
 
 summary(comp.hlm2)
 
+comp.hlm3 = glmer(cbind(compdeaths,deaths)~ ptgender +
+                    captype + I((paidyear-2009)/10) + 
+                    I(paidrate_d*1000) + I(paidrate_mn*1000) 
+                    (1|name),
+                  family=binomial(logit),data=comp.dat)
+
+summary(comp.hlm3)
 
 #######
 #results plots -- 2 maps and a bar chart with between within
@@ -305,6 +345,10 @@ plt2 = plotFEsim(sim[3:4,],oddsRatio=TRUE) +
         plot.title=element_text(hjust=1))
 
 library(gridExtra)
+
+pdf(file=paste0(draftimg,'effs.pdf'))
+  grid.arrange(plt1,plt2,nrow=2)
+dev.off()
 
 png(filename=paste0(draftimg,'effs.png'),
     height=10,width=19,units='in',res=200)

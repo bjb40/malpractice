@@ -173,16 +173,14 @@ ggplot(analyze.sum,aes(x=claimage,y=(paid/(deaths/1000)),color=factor(malyear)))
   ylab('Paid Claims per 1,000 Deaths') +
   xlab('Age of Claim') +
   theme_minimal() +
-  labs(title='Unadjusted malpractice rates across year and damage caps.',
-        subtitle='Adoption of state damage caps over period: 
-Never a cap ("nocap"), always a cap ("oldcap"), change in cap status ("switchcap").') + 
+  labs(title='Unadjusted malpractice rates across year and damage caps.') + 
   theme(legend.title=element_blank())
 
 #for paa poster
-ggsave(paste0(draftimg,'malpractice-px.png'),
-       height=10,width=18,dpi=200,units='in')
+#ggsave(paste0(draftimg,'malpractice-px.png'),
+#       height=10,width=18,dpi=200,units='in')
 
-#ggsave(paste0(draftimg,'malpractice-px.pdf'))
+ggsave(paste0(draftimg,'malpractice-px.pdf'))
 
 
 #####twiter print
@@ -330,15 +328,15 @@ biv=glm(cbind(paid,lx.mal)~factor(claimage) + I(comprate*1000) + factor(malyear)
 
 print(summary(biv))
 
-m1=glm(cbind(paid,lx.mal)~factor(claimage) + cap,
+m1=glm(cbind(paid,lx.mal)~factor(claimage) + captype,
        family=binomial(logit),data=dat)
 
-m1a=glm(cbind(paid,lx.mal)~claimage+I(claimage^2) + I(claimage^3) + cap,
+m1a=glm(cbind(paid,lx.mal)~claimage+I(claimage^2) + I(claimage^3) + captype,
         family=binomial(logit),data=dat)
 
 pred.m1=data.frame(predict.glm(m1,se.fit=TRUE,type='response'))
 pred.m1$claimage=m1$model[['factor(claimage)']]
-pred.m1$cap=m1$model$cap
+pred.m1$captype=m1$model$captype
 pred.m1$fitpoly=predict.glm(m1a,type='response')
 
 #confirm this is okay or use delta method from network project...
@@ -346,12 +344,13 @@ pred.m1=unique(pred.m1) %>%
   mutate(upper=fit+1.96*se.fit,
          lower=fit-1.96*se.fit)
 
-pred.plt = ggplot(pred.m1,aes(x=as.numeric(claimage),y=fit,color=factor(cap))) + 
+pred.plt = ggplot(pred.m1 %>% filter(as.numeric(claimage)<11),
+                  aes(x=as.numeric(claimage),y=fit*1000,color=captype)) + 
   geom_line() +  
-  geom_ribbon(aes(ymin=lower,ymax=upper,fill=factor(cap)),alpha=0.2)+ 
-  geom_line(aes(y=fitpoly),linetype=2) +
-  labs(title='Predicted malpractice rates by claimage',
-       subtitle='Solid is factor; dashed is polynomial model')
+  geom_ribbon(aes(ymin=lower*1000,ymax=upper*1000,fill=captype),alpha=0.2)+ 
+  labs(title='Predicted malpractice rates by claimage.') +
+  xlab('Claim Age') + ylab('Rate per 1000') +
+  facet_grid(.~captype) + theme_minimal()
 
 print(pred.plt) 
 ggsave(paste0(draftimg,'pred-plt.pdf'))
