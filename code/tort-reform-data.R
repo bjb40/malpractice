@@ -45,7 +45,9 @@ map.dat = merge(map_data('state') %>% rename(name=region),
     geom_line() + guides(colour=FALSE) 
   spag = tspag + aes(colour = factor(name)) +
     geom_smooth(se=FALSE, colour='black', size=2)
-  print(spag)
+  print(spag + theme_classic() + xlab('Year') + ylab('No. Reforms in State')+
+          labs(caption='Calculated from DSTLR.\nBlack line is smoothed average.'))
+  ggsave(paste0(draftimg,'reform_series.pdf'))
 
   map.plot=ggplot(map.dat,aes(long,lat,group=group)) + 
     geom_polygon(aes(fill=n_reform,color=factor(r_cap)),size=1.3,linetype=3) + coord_fixed() +

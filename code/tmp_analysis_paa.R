@@ -103,6 +103,13 @@ plotFEsim(mal3.sim[reform.eff,],oddsRatio=TRUE) +
 
 ggsave(paste0(draftimg,'reform-mprates.pdf'))
 
+keyreforms = c('r_cn','r_ct','r_cmpf','r_pp','r_sr','r_pcf','r_ct')
+
+#changes -- almost none!
+mal.dat %>% 
+  ungroup %>%
+  select_(.dots=paste0(keyreforms,'_d')) %>%
+  summarize_each(funs(mean(.,na.rm=TRUE)))
 
 ###
 #compdeaths model
@@ -110,11 +117,11 @@ ggsave(paste0(draftimg,'reform-mprates.pdf'))
 ###
 dat=dat %>% ungroup
 comp.dat = dat %>% 
-  dplyr::select(name,ptgender,captype,cap,paid,paidyear,n_reform,starts_with('r_')) %>%
+  dplyr::select(name,ptgender,captype,cap,paid,paidyear,n_reform,starts_with('r_'),-r_cap) %>%
   filter(paidyear<=2014) %>%
   group_by(name,ptgender,paidyear) 
 
-tst = summarize_at(comp.dat,vars(cap,paid,n_reform,starts_with('r_')),funs(mean(.,na.rm=TRUE)))
+comp.dat = summarize_at(comp.dat,vars(cap,paid,n_reform,starts_with('r_')),funs(mean(.,na.rm=TRUE)))
 
 comp.dat_m = dat %>%
   group_by(name,ptgender,malyear) %>%
@@ -166,13 +173,37 @@ comp.hlm2 = glmer(cbind(compdeaths,deaths)~ ptgender +
 
 summary(comp.hlm2)
 
-comp.hlm3 = glmer(cbind(compdeaths,deaths)~ ptgender +
-                    captype + I((paidyear-2009)/10) + 
-                    I(paidrate_d*1000) + I(paidrate_mn*1000) 
-                    (1|name),
-                  family=binomial(logit),data=comp.dat)
+form = paste('cbind(compdeaths,deaths)~ ptgender +
+                     I((paidyear-2009)/10) + 
+                    I(paidrate_d*1000) + I(paidrate_mn*1000) +', 
+             paste(paste0(reform,'_mn'),collapse='+'),'+',
+             paste(paste0(reform,'_d'),collapse='+'),
+             '+(1|name)')
+
+form2 = paste('cbind(compdeaths,deaths)~ ptgender +
+                     I((paidyear-2009)/10) + 
+                    I(paidrate_d*1000) + I(paidrate_mn*1000) +', 
+              paste(reform,collapse='+'),
+              '+(1|name)')
+
+###new model for presentation
+#rank deficiency for a number of reforms
+comp.hlm3 = glmer(form2,
+                 family=binomial(logit),data=comp.dat)
 
 summary(comp.hlm3)
+
+comp3.sim = FEsim(comp.hlm3,n.sims=200)
+reform.eff = grepl('r_',comp3.sim$term)
+levels(comp3.sim$term)[reform.eff] = reform.names[order(sort(reform))]
+plotFEsim(comp3.sim[reform.eff,],oddsRatio=TRUE) + 
+  labs(title='Effect of Tort Reform on Deaths by Medical Harm.') +
+  ylab('Odds Ratio') +
+  theme(axis.title.y = element_blank(),
+        plot.title=element_text(hjust=1))
+
+ggsave(paste0(draftimg,'reform-comprates.pdf'))
+
 
 #######
 #results plots -- 2 maps and a bar chart with between within
