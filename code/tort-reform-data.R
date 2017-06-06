@@ -5,6 +5,19 @@ library(dplyr); library(reshape2)
 dstlr.dir = "H:/Academic Projects/Data Files/DSTLR"
 dstlr = read.csv(paste0(dstlr.dir,'/dstlr-5.1-02212015.csv'))
 
+#code to change reforms to binary, i.e. top code to 1
+dstlr = dstlr %>% 
+  mutate_at(vars(starts_with('r_')),funs(ifelse(.>0,1,.)))
+
+#check coding
+print(
+  summarize_at(dstlr,vars(starts_with('r_')),funs(max(.,na.rm=TRUE)))
+)
+
+print(
+  summarize_at(dstlr,vars(starts_with('r_')),funs(min(.,na.rm=TRUE)))
+)
+
 dstlr=dstlr %>% 
   dplyr::select(name,year,r_cn,r_cp,r_ct,r_sr,r_cs,r_pe,r_pp,r_cf,r_js,r_pcf,r_cmpf) %>%
   mutate(r_cap=r_cn+r_cp+r_ct,
@@ -41,20 +54,6 @@ map.dat = merge(map_data('state') %>% rename(name=region),
 print(map.plot)
 ggsave(paste0(draftimg,'tort_reform.png'),
        h=10,w=18,units='in',dpi=200)
-
-#code to change reforms to binary, i.e. top code to 1
-dstlr = dstlr %>% 
-  mutate_at(vars(starts_with('r_')),funs(ifelse(.>0,1,.)))
-
-#check coding
-print(
-  summarize_at(dstlr,vars(starts_with('r_')),funs(max(.,na.rm=TRUE)))
-)
-
-print(
-  summarize_at(dstlr,vars(starts_with('r_')),funs(min(.,na.rm=TRUE)))
-)
-
 
 reform = c('r_cn','r_cp','r_ct','r_sr',
            'r_cs','r_pe','r_pp',

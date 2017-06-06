@@ -7,9 +7,9 @@
 dat = dat %>% ungroup
 
 mal.dat = dat %>% 
-  select(name,claimage,captype,deaths,n_reform,cap,
+  select(name,claimage,captype,deaths,n_reform,cap,ptgender,malyear,
          compdeaths,comprate,paid,paidyear, lx.mal,
-         starts_with('r_')) %>%
+         starts_with('r_'),-r_cap) %>%
   group_by(name,ptgender) %>%
   arrange(malyear) %>%
   mutate_each(funs(mn=mean(.,na.rm=TRUE), 
@@ -102,62 +102,6 @@ plotFEsim(mal3.sim[reform.eff,],oddsRatio=TRUE) +
         plot.title=element_text(hjust=1))
 
 ggsave(paste0(draftimg,'reform-mprates.pdf'))
-
-#generate predicted data for plotting fit
-#pick 3 random states
-nms = sample(unique(mal.dat$name),1)
-
-predict.bt = mal.dat[1:15,] %>% select(name,claimage_d)
-predict.bt$comprate_d=(-7:7)/1000
-predict.bt$ptgender='M'
-predict.bt$malyear = 2004
-predict.bt$name = nms
-predict.bt$captype='nocap'
-predict.bt$comprate_mn = mean(mal.dat$comprate_mn)
-predict.bt$n_reform_d = mean(mal.dat$n_reform_d)
-predict.bt$n_reform_mn = mean(mal.dat$n_reform_mn)
-predict.tmp = predict.bt
-c=1
-
-for(i in unique(mal.dat$claimage_d)){
-  #print(i)
-  predict.tmp$claimage_d = i
-  if(c!=1){
-    predict.bt = rbind(predict.bt,predict.tmp)
-  } else{
-    predict.bt$claimage_d = i
-  }
-  c=c+1
-}
-
-#test=predict(mal.hlm2,predict.bt,type='response')
-
-
-#u is the spherical errors on the random effects; use.u means not to draw new effects
-#use.u=FALSE, means to integrate over the uncertainty in 'u' (theoretically)
-#bootstrap 200
-#bootstrap c.i.
-predFun = function(fit){
-  predict(fit,predict.bt,type="response")
-}
-
-#generates columns --- can sum up...
-#bb=bootMer(mal.hlm2,nsim=2,FUN=predFun,use.u=TRUE,
-#           parallel='multicore',ncpus=4,verbose=TRUE)
-
-#predict.bt$pred=predict(mal.hlm2,predict.bt,type='response')
-#predict.bt$up=apply(bb$t,2,quantile,prob=0.975)
-#predict.bt$down=apply(bb$t,2,quantile,prob=0.025)
-
-#sum over claimage for 10 years... bootstrap using bb
-
-pr = predict.bt %>% 
-  group_by(malyear,comprate_d) %>%
-  summarize(pred=sum(pred))
-
-ggplot(pr,aes(x=comprate_d*1000,y=pred*1000)) + 
-         geom_line(linetype=2) 
-#  geom_ribbon(aes(ymin=down*1000,ymax=up*1000,fill=captype),alpha=0.05)
 
 
 ###
