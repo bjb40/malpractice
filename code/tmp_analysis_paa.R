@@ -28,7 +28,7 @@ mal.dat = dat %>%
 #    index=c('name','ptgender','malyear'))
 
 
-mal.m1 = glm(cbind(paid,lx.mal)~ ptgender + n_reform +
+mal.m1 = glm(cbind(paid,lx.mal)~ ptgender + n_reform_mn + n_reform_d +
            claimage+I(claimage^2) + I(claimage^3) + 
            cap + I(malyear-2009) + name,
     family=binomial(logit),data=mal.dat)
@@ -111,6 +111,40 @@ mal.dat %>%
   select_(.dots=paste0(keyreforms,'_d')) %>%
   summarize_each(funs(mean(.,na.rm=TRUE)))
 
+
+#merge arf.dat
+mal.dat = merge(mal.dat,arf.dat %>% rename(malyear=year),by=c('name','malyear'))
+
+form4 = paste('cbind(paid,lx.mal)~ ptgender +
+                   I(claimage_d/10) + I((claimage_d/10)^2) +
+                   + I(malyear-2009) + 
+                   I(comprate_d*1000) + I(comprate_mn*1000) +', 
+              paste(reform,collapse='+'),
+              '+hospbeds+mdactnfd+mdcragdienr+(1|name)')
+
+form4a = paste('cbind(paid,lx.mal)~ ptgender +
+                   I(claimage_d/10) +
+                   + I(malyear-2009) + 
+                   I(comprate_d*1000) + I(comprate_mn*1000) +', 
+              paste(reform,collapse='+'),
+              '+hospbeds+mdactnfd+mdcragdienr+(1|name)')
+
+#not hosptot highly colinear with hospbeds -- hospbeds probably better...
+#more beds/hospitals negatively associated with (marginal) / md ns but pos
+#mdsptcnfd is very unstable//dunno what it is
+#there are some issues with the shape...not an aft model possibly
+
+mal.hlm4 = glmer(form4a,
+                 family=binomial(logit),data=mal.dat)
+
+summary(mal.hlm4)
+mal4.sim =FEsim(mal.hlm4,n.sim=500)
+mal4.sim$term=as.character(mal4.sim$term)
+#should make this a function
+plotFEsim(mal4.sim,oddsRatio=TRUE)
+reform.eff = grepl('^r_',mal4.sim$term)
+mal4.sim$term[reform.eff] = reform.names
+plotFEsim(mal4.sim[reform.eff,],oddsRatio=TRUE) 
 ###
 #compdeaths model
 #collapse by paidyear...
@@ -203,6 +237,7 @@ plotFEsim(comp3.sim[reform.eff,],oddsRatio=TRUE) +
         plot.title=element_text(hjust=1))
 
 ggsave(paste0(draftimg,'reform-comprates.pdf'))
+
 
 
 #######
@@ -330,4 +365,40 @@ png(filename=paste0(draftimg,'effs.png'),
   grid.arrange(plt1,plt2,nrow=2)
 dev.off()
 
+####
+#covariance analysis
 
+covsub = mal.dat %>% ungroup %>%
+  dplyr::select(compdeaths,paid,lx.mal,n_reform) %>%
+  mutate(mal=(paid/lx.mal)*1000,
+         compdeaths=compdeaths*1000) %>%
+  dplyr::select(mal,n_reform,compdeaths)
+
+cor(covsub)
+cov(covsub)
+
+hlm.reform = lmer(n_reform~comprate + I(paid/lx.mal) + malyear + I(malyear^2) +
+                    ptgender +
+                    (1|name),data=mal.dat)
+summary(hlm.reform)
+plotFEsim(FEsim(hlm.reform))
+
+hlm.reform = lmer(n_reform~paidrate + I(compdeaths/deaths) + paidyear + I(paidyear^2) +
+                    ptgender +
+                    (1|name),data=comp.dat)
+
+
+summary(hlm.reform)
+plotFEsim(FEsim(hlm.reform))
+
+library(plm)
+
+plm.dat = comp.dat %>% ungroup %>%
+  mutate(comprate = compdeaths/deaths) %>%
+  dplyr::select(n_reform,comprate,paidrate,paidyear,name,ptgender)
+
+plm.dat$uid = paste0(plm.dat$name,plm.dat$ptgender) 
+plm.dat = plm.dat %>% dplyr::select(-name,-ptgender)
+
+summary(plm(n_reform~paidrate + comprate + paidyear,index ='uid',
+    data=plm.dat,model='within'))
